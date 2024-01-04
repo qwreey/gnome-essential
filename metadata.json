@@ -1,0 +1,10 @@
+{
+	"description": "Everything in here",
+	"name": "All in one. Essential tweaks",
+	"settings-schema": "org.gnome.shell.extensions.qwreey-essential",
+	"shell-version": [
+		"44"
+	],
+	"url": "https://github.com/qwreey/gnome-essential",
+	"uuid": "qwreey-essential@qwreey"
+}

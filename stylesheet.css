@@ -1,0 +1,140 @@
+/* notification */
+.notification-banner {
+	margin: 2px 5px 8px !important;
+}
+
+/* window shadow fix */
+.shadow {
+	box-shadow: 0px 0px 0px 0px rgba(83, 83, 83, 0.0);
+	transition-duration: 300ms;
+	transition-property: box-shadow;
+	transition-timing-function: linear;
+}
+
+/* transparent panel */
+.QE-transparent-panel {
+	background: transparent !important;
+}
+
+/* datemenu icon */
+.datemenu-icon {
+	icon-size: 16px;
+	margin-left: 0px;
+}
+.QE-reduce-panel-margin .clock-display-box {
+	spacing: 0px;
+}
+
+/* activities */
+.activity-box {
+	spacing: 2px;
+}
+.activity-icon {
+	padding: 0px;
+	icon-size: 18px;
+	/* width: 18pt; */
+	/* color: #ccc; */
+}
+/* .activity-icon:hover { */
+	/* padding: 0 1pt; */
+	/* icon-size: 18pt; */
+	/* color: white; */
+/* } */
+
+/* non-framed version */
+.desktop-label-nonempty-active {
+	margin-left: 0px;
+	margin-right: 5px;
+	background-color: rgba(154, 154, 154, 0.7);
+	border-radius: 4px;
+}
+
+.desktop-label-nonempty-inactive {
+	margin-left: 0px;
+	margin-right: 5px;
+	background-color: rgba(96, 96, 96, 0.7);
+	border-radius: 4px;
+}
+
+.desktop-label-empty-active {
+	margin-left: 0px;
+	margin-right: 5px;
+	background-color: rgba(154, 154, 154, 0.7);
+	border-radius: 4px;
+}
+
+.desktop-label-empty-inactive {
+	margin-left: 0px;
+	margin-right: 5px;
+	background-color: rgba(0, 0, 0, 0.0);
+	border-radius: 4px;
+}
+
+/* reduce space on panel */
+.QE-reduce-panel-margin #panelLeft,
+.QE-reduce-panel-margin #panelCenter,
+.QE-reduce-panel-margin #panelRight {
+	/* container */
+	spacing: 0px;
+}
+.QE-reduce-panel-margin  #panel .panel-button {
+	/* button */
+	-natural-hpadding: 4px;
+	-minimum-hpadding: 4px;
+	padding-left: 0px;
+	padding-right: 0px;
+}
+.QE-reduce-panel-margin  #panel .panel-button > .system-status-icon {
+	/* system icon container padding */
+	padding-left: 0px;
+	padding-right: 0px;
+}
+.QE-reduce-panel-margin #panel .panel-button .panel-status-indicators-box {
+	/* system icon spacing (each margin) */
+	spacing: 0px;
+}
+
+.QE-reduce-panel-margin #panel #panelActivities,
+.QE-reduce-panel-margin #panel .system-tray-icons,
+.QE-reduce-panel-margin #panel .desktop-name-label {
+	-natural-hpadding: 10px;
+	-minimum-hpadding: 8px;
+}
+
+.QE-reduce-panel-margin #panel .system-tray-icons .panel-status-indicators-box {
+	/* try icons */
+	spacing: 0px;
+}
+
+.QE-reduce-panel-margin #panel .panel-button.clock-display {
+	/* clock */
+	-natural-hpadding: 0px;
+	-minimum-hpadding: 0px;
+	padding-left: 0px;
+	padding-right: 0px;
+}
+.QE-reduce-panel-margin #panel .clock-display-box .clock {
+	/* clock */
+	padding-left: 8px;
+	padding-right: 8px;
+}
+.QE-reduce-panel-margin #panel .clock-display-box StIcon:last-child {
+	/* dnd icon */
+	margin-right: 2px;
+}
+
+.QE-reduce-panel-margin #panel .window-controls-container {
+	margin-left: 2px;
+	margin-right: 2px;
+}
+.QE-reduce-panel-margin #panelLeft .window-controls-container:first-child {
+	margin-left: 0px;
+}
+.QE-reduce-panel-margin #panelRight .window-controls-container:last-child {
+	margin-right: 0px;
+}
+
+.QE-edge-hide-icon-holder {
+	padding-left: 9px;
+	padding-right: 9px;
+}

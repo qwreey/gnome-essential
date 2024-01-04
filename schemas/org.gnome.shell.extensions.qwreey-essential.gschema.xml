@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+	<schema id="org.gnome.shell.extensions.qwreey-essential" path="/org/gnome/shell/extensions/qwreey-essential/">
+		<key name="format" type="s">
+			<default>""</default>
+			<summary>Format</summary>
+			<description>Format for the clock. Syntax https://developer.gnome.org/glib/stable/glib-GDateTime.html#g-date-time-format</description>
+		</key>
+		<key name="qe-themeswitch" type="as">
+			<default><![CDATA[['<Control><Super>t']]]></default>
+		</key>
+		<key name="qe-focusin" type="as">
+			<default><![CDATA[['<Control><Super>f']]]></default>
+		</key>
+		<key name="qe-backgroundicon" type="as">
+			<default><![CDATA[['<Control><Super>r']]]></default>
+		</key>
+		<key name="qe-input-method-change" type="as">
+			<default><![CDATA[['Alt_R']]]></default>
+			<!-- <default><![CDATA[['Alt_R']]]></default> -->
+		</key>
+		<key name="qe-ws-last-windows" type="as">
+			<default><![CDATA[[]]]></default>
+		</key>
+		<key name="qe-tmphide-last-windows" type="s">
+			<default>''</default>
+		</key>
+	</schema>
+</schemalist>
