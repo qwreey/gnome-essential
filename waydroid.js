@@ -68,7 +68,7 @@ var Waydroid = class Waydroid {
 	}
 
 	enable() {
-		this.windowInitedHandler = new WindowInitedHandler("Waydroid")
+		this.windowInitedHandler = new WindowInitedHandler()
 			.setInitWindowHandler(this.initWindow.bind(this))
 			.setUninitWindowHandler(this.uninitWindow.bind(this))
 			.setFilter(window=>window.get_wm_class() == "Weston Compositor")

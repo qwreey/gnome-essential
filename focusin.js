@@ -3,7 +3,7 @@ const Main = imports.ui.main
 const ExtensionUtils = imports.misc.extensionUtils
 const Me = ExtensionUtils.getCurrentExtension()
 
-const { WindowInitedHandler, Unresizabler } = Me.imports.libs.utility
+const { Unresizabler } = Me.imports.libs.utility
 
 class Holder extends St.Widget {
     static {

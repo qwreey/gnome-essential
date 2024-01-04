@@ -806,11 +806,11 @@ var Unresizabler = class Unresizabler {
 var WindowInitedHandler = class WindowInitedHandler {
 	#initWindow
 	#uninitWindow
-	#id
 	#filter
 	#method
-	constructor(initerId) {
-		this.#id = initerId + "_inited"
+	windows
+	constructor() {
+		this.windows = []
 	}
 
 	setInitWindowHandler(handler) {
@@ -860,13 +860,14 @@ var WindowInitedHandler = class WindowInitedHandler {
 		if (this.#filter) {
 			if (!this.#filter(window)) return
 		}
-		window[this.#id] = this
+		this.windows.push(window)
 		if (this.#initWindow) this.#initWindow(window,firstTime||false)
 	}
 
 	windowDestroying(window) {
-		if (!window[this.#id]) return
-		delete window[this.#id]
+		const index = this.windows.indexOf(window)
+		if (index == -1) return
+		this.windows.splice(index,1)
 		if (this.#uninitWindow) this.#uninitWindow(window)
 	}
 
@@ -882,7 +883,7 @@ var WindowInitedHandler = class WindowInitedHandler {
 			global.display.disconnect(this.windowCreatedEvent)
 		}
 		global.window_manager.disconnect(this.windowDestroyEvent)
-		this.windowDestroyEvent = this.windowCreatedEvent = null
+		this.windows = this.windowDestroyEvent = this.windowCreatedEvent = null
 	}
 }
 

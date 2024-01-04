@@ -8,6 +8,9 @@ var Blackout = class Blackout {
     constructor() {}
 
     initWindow(window) {
+        if (global.display.get_n_monitors() == 1) {
+            return
+        }
         const actor = window.get_compositor_private()
         if (window.get_monitor() != 0) return
         window.blackout = new St.Widget({
@@ -29,7 +32,7 @@ var Blackout = class Blackout {
     }
 
     enable() {
-        this.windowInitedHandler = new WindowInitedHandler("TrayIconFix")
+        this.windowInitedHandler = new WindowInitedHandler()
             .setInitWindowHandler(this.initWindow.bind(this))
             .setUninitWindowHandler(this.uninitWindow.bind(this))
             .setFilter(window=>window.wm_class == "Nemo-desktop")

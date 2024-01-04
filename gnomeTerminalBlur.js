@@ -40,7 +40,7 @@ var GnomeTerminalBlur = class GnomeTerminalBlur {
     }
 
     enable() {
-        this.windowInitedHandler = new WindowInitedHandler("GnomeTerminalBlur")
+        this.windowInitedHandler = new WindowInitedHandler()
 			.setInitWindowHandler(this.initWindow.bind(this))
 			.setUninitWindowHandler(this.uninitWindow.bind(this))
 			.setFilter(window=>window.wm_class == "Gnome-terminal" && isNormal(window))

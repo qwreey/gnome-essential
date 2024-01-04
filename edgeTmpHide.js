@@ -969,7 +969,7 @@ var EdgeTmpHide = class EdgeTmpHide {
 		})
 
 		// create window initer
-		this.windowInitedHandler = new WindowInitedHandler("EdgeTmpHide")
+		this.windowInitedHandler = new WindowInitedHandler()
 			.setInitWindowHandler(this.initWindow.bind(this))
 			.setUninitWindowHandler(this.uninitWindow.bind(this))
 			.setFilter(isNormal)

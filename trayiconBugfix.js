@@ -30,7 +30,7 @@ var TrayiconBugfix = class TrayiconBugfix {
     }
 
     enable() {
-        this.windowInitedHandler = new WindowInitedHandler("TrayIconFix")
+        this.windowInitedHandler = new WindowInitedHandler()
 			.setInitWindowHandler(this.initWindow.bind(this))
 			.setUninitWindowHandler(this.uninitWindow.bind(this))
 			.setFilter(window=>this.isIcon(window))

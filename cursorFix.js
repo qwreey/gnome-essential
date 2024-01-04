@@ -6,7 +6,19 @@ const Me = ExtensionUtils.getCurrentExtension()
 const { PointerUtil } = Me.imports.libs.utility
 
 var CursorFix = class CursorFix {
+    updateVisibility() {
+        if (global.display.get_n_monitors()!=1) {
+            this.disabledByMonitor = false
+        } else {
+            this.disabledByMonitor = true
+        }
+        if (this.visible) {
+            Main.layoutManager.removeChrome(this.widget)
+            this.visible = false
+        }
+    }
     enable() {
+        this.updateVisibility()
         this.monitorGeometry = global.display.get_monitor_geometry(0)
         global.overlayCursor = this.widget = new St.Widget({
             reactive: false,
@@ -27,6 +39,7 @@ var CursorFix = class CursorFix {
         this.visible = false
         PointerUtil.connectObject(
             'notify::position', (x,y)=>{
+                if (this.disabledByMonitor) return
                 if (global.display.get_current_monitor() != 0) {
                     if (this.visible) {
                         Main.layoutManager.removeChrome(this.widget)
@@ -46,16 +59,19 @@ var CursorFix = class CursorFix {
             },
             this
         )
+        this.monitorChanged =  Main.layoutManager.connect("monitors-changed",)
     }
 
     disable() {
+        Main.layoutManager.disconnect(this.monitorChanged)
         PointerUtil.disconnectObject(this)
         if (this.visible) {
             Main.layoutManager.removeChrome(this.widget)
         }
         this.widget.destroy()
-        this.widget = null
-        this.visible = null
+        this.widget =
+        this.visible =
+        this.monitorChanged =
         this.monitorGeometry = null
     }
 }

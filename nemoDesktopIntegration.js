@@ -2,7 +2,6 @@ const Main = imports.ui.main
 const { Gio, Meta, Shell, GLib } = imports.gi
 const ExtensionUtils = imports.misc.extensionUtils
 const Me = ExtensionUtils.getCurrentExtension()
-const { WindowInitedHandler } = Me.imports.libs.utility
 
 var NemoDesktopIntegration = class NemoDesktopIntegration {
 	constructor() {}
