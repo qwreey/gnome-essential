@@ -16,7 +16,7 @@
 			<default><![CDATA[['<Control><Super>r']]]></default>
 		</key>
 		<key name="qe-input-method-change" type="as">
-			<default><![CDATA[['Alt_R']]]></default>
+			<default><![CDATA[['Alt_R','Hangul']]]></default>
 			<!-- <default><![CDATA[['Alt_R']]]></default> -->
 		</key>
 		<key name="qe-ws-last-windows" type="as">

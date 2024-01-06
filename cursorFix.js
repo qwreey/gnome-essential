@@ -59,7 +59,7 @@ var CursorFix = class CursorFix {
             },
             this
         )
-        this.monitorChanged =  Main.layoutManager.connect("monitors-changed",)
+        this.monitorChanged =  Main.layoutManager.connect("monitors-changed",this.updateVisibility.bind(this))
     }
 
     disable() {

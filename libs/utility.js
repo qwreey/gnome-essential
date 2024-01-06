@@ -1047,8 +1047,8 @@ var WindowMover = class WindowMover {
       scale_y: animationSize.cloneGoalScaleY,
       x: animationSize.cloneGoalX,
       y: animationSize.cloneGoalY,
-      duration: 375,
-      mode: Clutter.AnimationMode.EASE_OUT_QUINT,
+      duration: 385,//375,
+      mode: Clutter.AnimationMode.EASE_OUT_EXPO,//EASE_OUT_QUINT,
     })
 
     // Real window animation
@@ -1057,8 +1057,8 @@ var WindowMover = class WindowMover {
       scale_y: 1,
       translation_x: 0,
       translation_y: 0,
-      duration: 375,
-      mode: Clutter.AnimationMode.EASE_OUT_QUINT,
+      duration: 385,//,375,
+      mode: Clutter.AnimationMode.EASE_OUT_EXPO,//EASE_OUT_QUINT,
       onStopped: ()=>{
         const nowAnimation = this._windowAnimations.find(item=>item.window === window)
         if (nowAnimation?.clone === clone) this._destroyAnimation(nowAnimation)
