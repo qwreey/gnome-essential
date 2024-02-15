@@ -6,6 +6,8 @@ const Me = ExtensionUtils.getCurrentExtension()
 
 const { FocusArray, WindowInitedHandler, isNormal, safeDestroy, getShadowSize } = Me.imports.libs.utility
 
+const [ TOP, BOTTOM, LEFT, RIGHT ] = [0,1,2,3]
+
 const SIDE_LEFT = 0
 const SIDE_RIGHT = 1
 
@@ -15,6 +17,7 @@ const OVERLAY_OPACITY = 242
 const OVERLAY_PADDING = 6
 const OVERLAY_MARGIN = 6
 const PREVIEW_PADDING = 90
+const panelPosition = TOP
 
 const ICON_SIZE = 22
 
@@ -66,7 +69,7 @@ class HideOverlayHolder {
 			x: mainMonitor.x,
 			y: mainMonitor.y,
 			width: mainMonitor.width,
-			height: mainMonitor.height - Main.panel.height,
+			height: mainMonitor.height,
 			offscreen_redirect: Clutter.OffscreenRedirect.ALWAYS,
 			clip_to_allocation: true,
 			reactive: false,
@@ -119,15 +122,15 @@ class HideOverlayHolder {
 			this.monitorIndex = global.display.get_primary_monitor()
 			const mainMonitor = this.monitorGeometry = global.display.get_monitor_geometry(this.monitorIndex)
 			this.leftHolder.x = mainMonitor.x
-			this.leftHolder.y = mainMonitor.y
+			this.leftHolder.y = mainMonitor.y + (panelPosition == TOP ? Main.panel.height : 0)
 			this.leftHolder.height = mainMonitor.height - Main.panel.height
 			this.rightHolder.x = mainMonitor.x+mainMonitor.width-OVERLAY_WIDTH
-			this.rightHolder.y = mainMonitor.y
+			this.rightHolder.y = mainMonitor.y + (panelPosition == TOP ? Main.panel.height : 0)
 			this.rightHolder.height = mainMonitor.height - Main.panel.height
 			this.animationHolder.x = mainMonitor.x
 			this.animationHolder.y = mainMonitor.y
 			this.animationHolder.width = mainMonitor.width
-			this.animationHolder.height = mainMonitor.height - Main.panel.height
+			this.animationHolder.height = mainMonitor.height
 			this.reorderLeft()
 			this.reorderRight()
 
@@ -139,8 +142,9 @@ class HideOverlayHolder {
 			// this.setBackground(this.leftHolderBackground)
 			// this.setBackground(this.rightHolderBackground)
 		}
-		this.monitorChanged = Main.layoutManager.connect("monitors-changed",updateView)
-		this.panelHeightChanged = Main.panel.connect("notify::height",updateView)
+		const trigUpdateView = ()=>GLib.timeout_add(GLib.PRIORITY_DEFAULT,12,()=>updateView)
+		this.monitorChanged = Main.layoutManager.connect("monitors-changed",trigUpdateView)
+		this.panelHeightChanged = Main.panel.connect("notify::height",trigUpdateView)
 
 		this.leftChildren = []
 		this.rightChildren = []
@@ -660,10 +664,10 @@ class HideOverlay {
 	calculateCloneWindowSizeAndPositionInMonitor() {
 		const scale = (OVERLAY_HIEGHT-ICON_SIZE)/(this.shadowSize.bufferHeight)
 		return {
-			x: this.position.x
+			x:  this.position.x
 				+( this.side == SIDE_LEFT ? this.shadowSize.left*scale : -this.shadowSize.right*scale )
 				+( this.side == SIDE_LEFT ? -this.shadowSize.bufferWidth*scale+OVERLAY_WIDTH-OVERLAY_PADDING : OVERLAY_PADDING ),
-			y: this.position.y,
+			y:  this.position.y,
 			scale,
 		}
 	}
@@ -1020,8 +1024,8 @@ var EdgeTmpHide = class EdgeTmpHide {
 				display: global.display,
 				x1: 0,
 				x2: 0,
-				y1: 1,
-				y2: global.stage.height,
+				y1: 1 + (panelPosition == TOP ? Main.panel.height : 0),
+				y2: global.stage.height + (panelPosition == BOTTOM ? -Main.panel.height : 0),
 				directions: Meta.BarrierDirection.POSITIVE_X,
 			})
 			this.pressureBarrier.addBarrier(this.leftBarrier)
@@ -1032,8 +1036,8 @@ var EdgeTmpHide = class EdgeTmpHide {
 				display: global.display,
 				x1: global.stage.width,
 				x2: global.stage.width,
-				y1: 1,
-				y2: global.stage.height,
+				y1: 1 + (panelPosition == TOP ? Main.panel.height : 0),
+				y2: global.stage.height + (panelPosition == BOTTOM ? -Main.panel.height : 0),
 				directions: Meta.BarrierDirection.NEGATIVE_X,
 			})
 			this.pressureBarrier.addBarrier(this.rightBarrier)

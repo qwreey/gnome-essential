@@ -85,8 +85,8 @@ var EdgeDragWorkspaceSwitches = class EdgeDragWorkspaceSwitches {
 				display: global.display,
 				x1: 0,
 				x2: 0,
-				y1: 1,
-				y2: global.stage.height,
+				y1: 0,
+				y2: 32,
 				directions: Meta.BarrierDirection.POSITIVE_X,
 			})
 
@@ -94,8 +94,8 @@ var EdgeDragWorkspaceSwitches = class EdgeDragWorkspaceSwitches {
 				display: global.display,
 				x1: global.stage.width,
 				x2: global.stage.width,
-				y1: 1,
-				y2: global.stage.height,
+				y1: 0,
+				y2: 32,
 				directions: Meta.BarrierDirection.NEGATIVE_X,
 			})
 

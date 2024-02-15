@@ -2,7 +2,7 @@ const ExtensionUtils = imports.misc.extensionUtils
 const Me = ExtensionUtils.getCurrentExtension()
 
 // https://github.com/Schneegans/Desktop-Cube
-// const { EdgeDragWorkspaceSwitches } = Me.imports.edgeDragWorkspaceSwitches
+const { EdgeDragWorkspaceSwitches } = Me.imports.edgeDragWorkspaceSwitches
 
 // https://github.com/squgeim/Workspace-Scroll
 const { TopbarScroll } = Me.imports.topbarScroll

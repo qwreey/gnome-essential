@@ -75,7 +75,8 @@ var Wireframe = class Wireframe {
 		windowActor.hide()
 
 		// Get min size
-		if (window.maximized_vertically || window.maximized_horizontally) {
+		if (this.#draggedPos.maximized) {
+			this.#draggedPos.maximized = false
 			window.unmaximize(Meta.MaximizeFlags.BOTH)
 			windowActor.remove_all_transitions() // remove unmaximize animation
 		}
@@ -237,7 +238,7 @@ var Wireframe = class Wireframe {
 		global.display.set_cursor(Meta.Cursor.DEFAULT)
 		
 		// Create resize animation on clone actor
-		this.#windowMover.setWindowRect(window, newX, newY, newWidth, newHeight, true, this.#draggedWindowClone)
+		this.#windowMover.setWindowRect(window, newX, newY, newWidth, newHeight, true, this.#draggedWindowClone, this.#draggedPos)
 		this.#draggedWindowActor = this.#draggedWindowClone = this.#draggedWindow = null
 	}
 	pointerMove(x, y) {

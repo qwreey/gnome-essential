@@ -15,18 +15,14 @@ var PanelDateFormat = class PanelDateFormat {
 		this.formatClockDisplay.clutter_text.ellipsize = Pango.EllipsizeMode.NONE
 		// this.settings = ExtensionUtils.getSettings()
 
-		// FIXME: Set this.settings first time to make it visible in dconf Editor
-		// if (!this.settings.get_string('format')) {
-			// this.settings.set_string('format', '%Y.%m.%d %H:%M')
-			// this.settings.set_string('format', '%m/%d %H:%M')
-		// }
-
 		this.originalClockDisplay.hide()
 		this.originalClockDisplay.get_parent().insert_child_below(this.formatClockDisplay, this.originalClockDisplay)
-		this.timeoutID = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, ()=>{
+		const timer = ()=>{
 			this.tick(this)
+			this.timeoutID = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, timer)
 			return GLib.SOURCE_REMOVE
-		})
+		}
+		timer()
 	}
 
 	/**

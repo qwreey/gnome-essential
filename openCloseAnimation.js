@@ -1,4 +1,4 @@
-const { Clutter, Meta, St } = imports.gi
+const { Clutter, Meta, St, Shell } = imports.gi
 
 const Main = imports.ui.main
 
@@ -84,6 +84,7 @@ var OpenCloseAnimation = class OpenCloseAnimation {
 			switch (actor._windowType) {
 			case Meta.WindowType.NORMAL:
 				actor.show()
+
 				actor.remove_all_transitions()
 				actor.set_pivot_point(0.5, 0.5)
 				actor.scale_x = 0.6
@@ -98,6 +99,39 @@ var OpenCloseAnimation = class OpenCloseAnimation {
 					mode: Clutter.AnimationMode.EASE_OUT_EXPO,
 					onStopped: ()=>actor.set_pivot_point(0, 0)
 				})
+				break
+
+				// const blur = new Shell.BlurEffect({
+				// 	brightness: 1,
+				// 	sigma: 82,
+				// 	mode: Shell.BlurMode.ACTOR
+				// })
+				// actor.add_effect_with_name("open_blur",blur)
+
+				// actor.remove_all_transitions()
+				// actor.set_pivot_point(0.5, 0.5)
+				// actor.scale_x = 1.5//0.6
+				// actor.scale_y = 1.5//0.6
+				// actor.opacity = 160
+
+				// actor.ease({
+				// 	opacity: 255,
+				// 	scale_x: 1,
+				// 	scale_y: 1,
+				// 	duration: 385,//360,
+				// 	mode: Clutter.AnimationMode.EASE_OUT_EXPO,
+				// 	onStopped: ()=>actor.set_pivot_point(0, 0)
+				// })
+				// // break
+				// const timeline = new Clutter.Timeline({ actor:actor,duration: 385,progress_mode: Clutter.AnimationMode.EASE_OUT_EXPO })
+				// timeline.connect("new-frame",()=>{
+				// 	const progress = timeline.get_progress()
+				// 	blur.sigma = 82*(1-progress)
+				// })
+				// timeline.connect('completed', ()=>{
+				// 	actor.remove_effect_with_name("open_blur")
+				// })
+				// timeline.start()
 				break
 			case Meta.WindowType.TOOLTIP:
 				actor.show()
@@ -194,6 +228,35 @@ var OpenCloseAnimation = class OpenCloseAnimation {
 					mode: Clutter.AnimationMode.EASE_IN_QUART,
 					onStopped: ()=>clone.destroy()
 				})
+				// clone.ease({
+				// 	scale_x: 1.4,//0.55,
+				// 	scale_y: 1.4,//0.55,
+				// 	opacity: 0,
+				// 	// translation_y: bottom,
+				// 	// duration: 200,
+				// 	duration: 385,
+				// 	// mode: Clutter.AnimationMode.EASE_IN_QUART,
+				// 	mode: Clutter.AnimationMode.EASE_OUT_EXPO,
+				// 	onStopped: ()=>clone.destroy()
+				// })
+
+				// const blur = new Shell.BlurEffect({
+				// 	brightness: 1,
+				// 	sigma: 0,
+				// 	mode: Shell.BlurMode.ACTOR
+				// })
+				// clone.add_effect_with_name("open_blur",blur)
+
+				// // break
+				// const timeline = new Clutter.Timeline({ actor:clone,duration: 385,progress_mode: Clutter.AnimationMode.EASE_OUT_EXPO })
+				// timeline.connect("new-frame",()=>{
+				// 	const progress = timeline.get_progress()
+				// 	blur.sigma = 82*progress
+				// })
+				// timeline.connect('completed', ()=>{
+				// 	clone.remove_effect_with_name("open_blur")
+				// })
+				// timeline.start()
 				break
 			case Meta.WindowType.TOOLTIP:
 				clone = this._captureWindow(actor)

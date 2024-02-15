@@ -976,7 +976,7 @@ var WindowMover = class WindowMover {
     }
   }
 
-  async setWindowRect(window, x, y, width, height, animate, clone) {
+  async setWindowRect(window, x, y, width, height, animate, clone, beforeShadow) {
 	if (!animate) {
 		clone.destroy()
 		clone = null
@@ -986,7 +986,7 @@ var WindowMover = class WindowMover {
     const thisAnimation = {}
 
     // Calculate before size / position
-	const beforeShadow = getShadowSize(window)
+	beforeShadow ??= getShadowSize(window)
 	const animationSize = getResizeAnimationSize(beforeShadow,x,y,width,height)
 
     // destroy last animation and freeze actor
