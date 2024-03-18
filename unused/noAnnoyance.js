@@ -40,3 +40,5 @@ var NoAnnoyance = class NoAnnoyance {
 		Main.windowAttentionHandler = this.oldHandler
 	}
 }
+
+// this is not required for 45.5

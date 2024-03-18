@@ -1,10 +1,12 @@
-const { Clutter, Meta } = imports.gi
-const Main = imports.ui.main
-const ExtensionUtils = imports.misc.extensionUtils
-const Me = ExtensionUtils.getCurrentExtension()
-const { getResizeAnimationSize, getShadowSize } = Me.imports.libs.utility
+import Meta from "gi://Meta"
+import Clutter from "gi://Clutter"
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
+import {
+    getShadowSize,
+    getResizeAnimationSize,
+} from "./libs/utility.js"
 
-var MoveAnimation = class MoveAnimation {
+export class MoveAnimation {
 	constructor() {}
 
 	_captureWindow(window_actor) {

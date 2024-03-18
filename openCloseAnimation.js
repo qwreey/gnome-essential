@@ -1,14 +1,8 @@
-const { Clutter, Meta, St, Shell } = imports.gi
+import Meta from "gi://Meta"
+import Clutter from "gi://Clutter"
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
 
-const Main = imports.ui.main
-
-const types = [
-	Meta.WindowType.NORMAL,
-	Meta.WindowType.DIALOG,
-	Meta.WindowType.MODAL_DIALOG,
-]
-
-var OpenCloseAnimation = class OpenCloseAnimation {
+export class OpenCloseAnimation {
 	constructor() {}
 
 	get_bottom(actor) {
@@ -45,31 +39,6 @@ var OpenCloseAnimation = class OpenCloseAnimation {
 			return
 		}
 
-// this.wmMap = global.window_manager.connect("map",async(e, actor)=>{
-// log(`EVENT_WINDOW_CREATED::
-//     id: ${(()=>{try {return actor.meta_window.get_id()} catch{}})()}
-//     title: ${actor.meta_window.get_title()}
-//     sandboxAppId (flatpak): ${actor.meta_window.get_sandboxed_app_id()}
-//     description: ${actor.meta_window.get_description()}
-//     root_ancestor: ${actor.meta_window.find_root_ancestor()?.get_id()}
-//   wm:
-//     wmClass: ${actor.meta_window.get_wm_class()}
-//     wmClassInstance: ${actor.meta_window.get_wm_class_instance()}
-//     wmRole: ${actor.meta_window.get_role()}
-//     wmMutterHint: ${actor.meta_window.get_mutter_hints()}
-//     wmType: ${["NORMAL","DESKTOP","DOCK","DIALOG","MODAL_DIALOG","TOOLBAR","MENU","UTILITY","SPLASHSCREEN","DROPDOWN_MENU","POPUP_MENU","TOOLTIP","NOTIFICATION","COMBO","DND","OVERRIDE_OTHER"][actor._windowType]}(${actor._windowType})
-//     wmClientType: ${["WAYLAND (0)","X11 (1)"][actor.meta_window.get_client_type()]}
-//     wmFrameType: ${["NORMAL 0","DIALOG 1","MODAL_DIALOG 2","UTILITY 3","MENU 4","BORDER 5","ATTACHED 6","LAST 7"][actor.meta_window.get_frame_type()]}
-//   gtk:
-//     gtkApplicationId: ${actor.meta_window.get_gtk_application_id()}
-//     gtkApplicationObjectPath: ${actor.meta_window.get_gtk_application_object_path()}
-//     gtkObjectPath: ${actor.meta_window.get_gtk_window_object_path()}
-//     gtkMenubarObjectPath: ${actor.meta_window.get_gtk_menubar_object_path()}
-//     gtkAppMenuObjectPath: ${get_gtk_app_menu_object_path()}
-//     gtkUniqueBusName: ${actor.meta_window.get_gtk_unique_bus_name()}
-//     gtkThemeVariant: ${actor.meta_window.get_gtk_theme_variant()}`)
-// })
-
 		this.wmMap = global.window_manager.connect("map",async(e, actor)=>{
 			if (((!actor._windowType) || actor._windowType == Meta.WindowType.DESKTOP) && actor.meta_window.get_wm_class() == "Nemo-desktop") {
 				actor.show()
@@ -101,38 +70,6 @@ var OpenCloseAnimation = class OpenCloseAnimation {
 				})
 				break
 
-				// const blur = new Shell.BlurEffect({
-				// 	brightness: 1,
-				// 	sigma: 82,
-				// 	mode: Shell.BlurMode.ACTOR
-				// })
-				// actor.add_effect_with_name("open_blur",blur)
-
-				// actor.remove_all_transitions()
-				// actor.set_pivot_point(0.5, 0.5)
-				// actor.scale_x = 1.5//0.6
-				// actor.scale_y = 1.5//0.6
-				// actor.opacity = 160
-
-				// actor.ease({
-				// 	opacity: 255,
-				// 	scale_x: 1,
-				// 	scale_y: 1,
-				// 	duration: 385,//360,
-				// 	mode: Clutter.AnimationMode.EASE_OUT_EXPO,
-				// 	onStopped: ()=>actor.set_pivot_point(0, 0)
-				// })
-				// // break
-				// const timeline = new Clutter.Timeline({ actor:actor,duration: 385,progress_mode: Clutter.AnimationMode.EASE_OUT_EXPO })
-				// timeline.connect("new-frame",()=>{
-				// 	const progress = timeline.get_progress()
-				// 	blur.sigma = 82*(1-progress)
-				// })
-				// timeline.connect('completed', ()=>{
-				// 	actor.remove_effect_with_name("open_blur")
-				// })
-				// timeline.start()
-				break
 			case Meta.WindowType.TOOLTIP:
 				actor.show()
 				actor.remove_all_transitions()
@@ -228,35 +165,6 @@ var OpenCloseAnimation = class OpenCloseAnimation {
 					mode: Clutter.AnimationMode.EASE_IN_QUART,
 					onStopped: ()=>clone.destroy()
 				})
-				// clone.ease({
-				// 	scale_x: 1.4,//0.55,
-				// 	scale_y: 1.4,//0.55,
-				// 	opacity: 0,
-				// 	// translation_y: bottom,
-				// 	// duration: 200,
-				// 	duration: 385,
-				// 	// mode: Clutter.AnimationMode.EASE_IN_QUART,
-				// 	mode: Clutter.AnimationMode.EASE_OUT_EXPO,
-				// 	onStopped: ()=>clone.destroy()
-				// })
-
-				// const blur = new Shell.BlurEffect({
-				// 	brightness: 1,
-				// 	sigma: 0,
-				// 	mode: Shell.BlurMode.ACTOR
-				// })
-				// clone.add_effect_with_name("open_blur",blur)
-
-				// // break
-				// const timeline = new Clutter.Timeline({ actor:clone,duration: 385,progress_mode: Clutter.AnimationMode.EASE_OUT_EXPO })
-				// timeline.connect("new-frame",()=>{
-				// 	const progress = timeline.get_progress()
-				// 	blur.sigma = 82*progress
-				// })
-				// timeline.connect('completed', ()=>{
-				// 	clone.remove_effect_with_name("open_blur")
-				// })
-				// timeline.start()
 				break
 			case Meta.WindowType.TOOLTIP:
 				clone = this._captureWindow(actor)

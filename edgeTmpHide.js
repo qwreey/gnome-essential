@@ -1,10 +1,18 @@
-const {Shell, Meta, Clutter, St, Gtk, GLib} = imports.gi
-const Layout = imports.ui.layout
-const Main = imports.ui.main
-const ExtensionUtils = imports.misc.extensionUtils
-const Me = ExtensionUtils.getCurrentExtension()
+import Meta from "gi://Meta"
+import GLib from "gi://GLib"
+import St from "gi://St"
+import Shell from "gi://Shell"
+import Clutter from "gi://Clutter"
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
+import * as Layout from "resource:///org/gnome/shell/ui/layout.js"
 
-const { FocusArray, WindowInitedHandler, isNormal, safeDestroy, getShadowSize } = Me.imports.libs.utility
+import {
+	FocusArray,
+	WindowInitedHandler,
+	isNormal,
+	safeDestroy,
+	getShadowSize
+} from "./libs/utility.js"
 
 const [ TOP, BOTTOM, LEFT, RIGHT ] = [0,1,2,3]
 
@@ -897,9 +905,9 @@ class HideOverlay {
 	}
 }
 
-var EdgeTmpHide = class EdgeTmpHide {
-	enable() {
-		this.settings = ExtensionUtils.getSettings()
+export class EdgeTmpHide {
+	enable(extension) {
+		this.settings = extension.getSettings()
 		this.hideOverlayHolder = new HideOverlayHolder()
 		this.hideOverlayHolder.leftSideDisabled = true
 		try {

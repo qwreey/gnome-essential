@@ -1,8 +1,6 @@
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
 
-const Main = imports.ui.main
-const PanelMenu = imports.ui.panelMenu
-
-var MoveDateMenu = class MoveDateMenu {
+export class MoveDateMenu {
 	constructor() {}
 	#dateMenuActor
 

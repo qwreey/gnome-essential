@@ -1,9 +1,9 @@
-const { Meta, St, GLib, Shell, Clutter, GObject } = imports.gi
-const Main = imports.ui.main
-const ExtensionUtils = imports.misc.extensionUtils
-const Me = ExtensionUtils.getCurrentExtension()
-
-const { Unresizabler } = Me.imports.libs.utility
+import Meta from "gi://Meta"
+import St from "gi://St"
+import Shell from "gi://Shell"
+import Clutter from "gi://Clutter"
+import GObject from "gi://GObject"
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
 
 class Holder extends St.Widget {
     static {
@@ -69,9 +69,7 @@ class Holder extends St.Widget {
     // }
 }
 
-
-
-var FocusIn = class FocusIn {
+export class FocusIn {
     constructor() {}
 
     moveCursor(y) {
@@ -125,9 +123,9 @@ var FocusIn = class FocusIn {
         }
     }
 
-    enable() {
+    enable(extension) {
         this.size = 30
-        this.settings = ExtensionUtils.getSettings()
+        this.settings = extension.getSettings()
         this.virtualPointer = Clutter.get_default_backend().get_default_seat().create_virtual_device(Clutter.InputDeviceType.POINTER_DEVICE)
         this.visible = false
 

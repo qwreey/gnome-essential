@@ -1,11 +1,15 @@
-const { St, GLib, Meta } = imports.gi
-const Main = imports.ui.main
+import Meta from "gi://Meta"
+import GLib from "gi://Meta"
+import St from "gi://Meta"
+
+import { gettext as _ } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js"
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
 
 const ExtensionUtils = imports.misc.extensionUtils
 const Me = ExtensionUtils.getCurrentExtension()
 const { PointerUtil } = Me.imports.libs.utility
 
-var CursorFix = class CursorFix {
+export class CursorFix {
     updateVisibility() {
         if (global.display.get_n_monitors()!=1) {
             this.disabledByMonitor = false

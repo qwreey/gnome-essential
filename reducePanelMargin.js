@@ -1,8 +1,7 @@
 
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
 
-const Main = imports.ui.main
-
-var ReducePanelMargin = class ReducePanelMargin {
+export class ReducePanelMargin {
 	constructor () {}
 
 	async enable() {

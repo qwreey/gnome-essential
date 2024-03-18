@@ -1,8 +1,9 @@
-const {Shell, Meta} = imports.gi
-const Layout = imports.ui.layout
-const Main = imports.ui.main
+import Shell from "gi://Shell"
+import Meta from "gi://Meta"
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
+import * as Layout from "resource:///org/gnome/shell/ui/layout.js"
 
-var EdgeDragWorkspaceSwitches = class EdgeDragWorkspaceSwitches {
+export class EdgeDragWorkspaceSwitches {
 	enable() {
 		// -----------------------------------------------------------------------------------
 		// ----------------------- enable edge-drag workspace-switches -----------------------

@@ -1,131 +1,139 @@
-const ExtensionUtils = imports.misc.extensionUtils
-const Me = ExtensionUtils.getCurrentExtension()
+import { Extension } from "resource:///org/gnome/shell/extensions/extension.js"
 
 // https://github.com/Schneegans/Desktop-Cube
-const { EdgeDragWorkspaceSwitches } = Me.imports.edgeDragWorkspaceSwitches
+// import { EdgeDragWorkspaceSwitches } from "./edgeDragWorkspaceSwitches.js"
 
 // https://github.com/squgeim/Workspace-Scroll
-const { TopbarScroll } = Me.imports.topbarScroll
+import { TopbarScroll } from "./topbarScroll.js"
 
 // https://github.com/fthx/workspaces-bar
-// const { WorkspacesBarHandler } = Me.imports.workspaceBar
+// import { WorkspacesBarHandler } from "./workspaceBar.js"
 
 // https://github.com/bdaase/noannoyance
-const { NoAnnoyance } = Me.imports.noAnnoyance
+// import { NoAnnoyance } from "./noAnnoyance.js"
 
 // https://extensions.gnome.org/extension/591/remove-app-menu/
-const { RemoveAppMenu } = Me.imports.removeAppMenu
+import { RemoveAppMenu } from "./removeAppMenu.js"
 
 // https://github.com/KEIII/gnome-shell-panel-date-format
-const { PanelDateFormat } = Me.imports.panelDateFormat
+import { PanelDateFormat } from "./panelDateFormat.js"
 
 // https://extensions.gnome.org/extension/2741/remove-alttab-delay-v2/
-const { RemoveAltTabDelay } = Me.imports.removeAltTabDelay
+// import { RemoveAltTabDelay } from "./removeAltTabDelay.js"
 
 // https://extensions.gnome.org/extension/2872/activities-icons/
-const { MenuButtons } = Me.imports.menuButtons
+import { MenuButtons } from "./menuButtons.js"
 
 // https://gitlab.gnome.org/jrahmatzadeh/just-perfection
-const { MoveNotification } = Me.imports.moveNotification
+import { MoveNotification } from "./moveNotification.js"
 
-const { MoveDateMenu } = Me.imports.moveDateMenu
-const { RemoveDash } = Me.imports.removeDash
-// const { AnimationSpeed } = Me.imports.animationSpeed
-const { ReducePanelMargin } = Me.imports.reducePanelMargin
-const { NemoDesktopIntegration } = Me.imports.nemoDesktopIntegration
-const { ChangeWorkspaceEasing } = Me.imports.changeWorkspaceEasing
-const { StartupNoOverview } = Me.imports.startupNoOverview
-const { TransparentPanel } = Me.imports.transparentPanel
-const { MinimizeAnimation } = Me.imports.minimizeAnimation
-const { MoveAnimation } = Me.imports.moveAnimation
-const { OpenCloseAnimation } = Me.imports.openCloseAnimation
-// const { AddDateMenuIcon } = Me.imports.addDateMenuIcon
-const { ThemeHandle } = Me.imports.themeHandle
-// const { LapyIsCute } = Me.imports.lapyIsCute
-const { Waydroid } = Me.imports.waydroid
-const { EdgeTmpHide } = Me.imports.edgeTmpHide
-const { TrayiconBugfix } = Me.imports.trayiconBugfix
-const { FuckYouKakaoTalk } = Me.imports.fuckYouKakaoTalk
+import { MoveDateMenu } from "./moveDateMenu.js"
+import { RemoveDash } from "./removeDash.js"
+// import { AnimationSpeed } from "./animationSpeed.js"
+import { ReducePanelMargin } from "./reducePanelMargin.js"
+import { NemoDesktopIntegration } from "./nemoDesktopIntegration.js"
+import { ChangeWorkspaceEasing } from "./changeWorkspaceEasing.js"
+import { StartupNoOverview } from "./startupNoOverview.js"
+// import { TransparentPanel } from "./transparentPanel.js"
+import { MinimizeAnimation } from "./minimizeAnimation.js"
+import { MoveAnimation } from "./moveAnimation.js"
+import { OpenCloseAnimation } from "./openCloseAnimation.js"
+// import { AddDateMenuIcon } from "./addDateMenuIcon.js"
+import { ThemeHandle } from "./themeHandle.js"
+// import { LapyIsCute } from "./lapyIsCute.js"
+// import { Waydroid } from "./waydroid.js"
+import { EdgeTmpHide } from "./edgeTmpHide.js"
+// import { TrayiconBugfix } from "./trayiconBugfix.js"
+// import { FuckYouKakaoTalk } from "./fuckYouKakaoTalk.js"
 
-const { ExtensionHandlers } = Me.imports.libs.utility
-const { GnomeTerminalBlur } = Me.imports.gnomeTerminalBlur
-const { FocusIn } = Me.imports.focusin
-const { InputMethodChanger } = Me.imports.inputMethodChanger
-const { CursorFix } = Me.imports.cursorFix
-// const { Blackout } = Me.imports.blackout
-const { Wireframe } = Me.imports.wireframe
+import { ExtensionHandlers } from "./libs/utility.js"
+// import { GnomeTerminalBlur } from "./gnomeTerminalBlur.js"
+import { FocusIn } from "./focusin.js"
+import { InputMethodChanger } from "./inputMethodChanger.js"
+// import { CursorFix } from "./cursorFix.js"
+// import { Blackout } from "./blackout.js"
+import { Wireframe } from "./wireframe.js"
 
-const verbose = true
-var enabledList,start,last,now
+const verbose = false
 
-function enable() {
-	last = start = +Date.now()
-	log("[QE] Setup shared objects")
-	for (const item of ExtensionHandlers) {
-		item.enable()
-		if (verbose) {
-			now = +Date.now()
-			log("[QE] | Loaded " + item.constructor.name + " taken "+ (now - last) + "ms")
-			last = now
+export default class MainExtension extends Extension {
+	constructor(meta) {
+		super(meta)
+		this.enabledList = null
+		this.start = null
+		this.last = null
+		this.now = null
+	}
+
+	enable() {
+		this.last = this.start = +Date.now()
+		log("[QE] Setup shared objects")
+		for (const item of ExtensionHandlers) {
+			item.enable(this)
+			if (verbose) {
+				this.now = +Date.now()
+				log("[QE] | Loaded " + item.constructor.name + " taken "+ (this.now - this.last) + "ms")
+				this.last = this.now
+			}
 		}
-	}
-
-	log("[QE] Init classes")
-	enabledList = [
-		new FuckYouKakaoTalk(),
-		new EdgeTmpHide(),
-		// new EdgeDragWorkspaceSwitches(),
-		new RemoveAppMenu(),
-		new NoAnnoyance(),
-		new PanelDateFormat(),
-		// new WorkspacesBarHandler(),
-		new TopbarScroll(),
-		new RemoveAltTabDelay(),
-		new MoveDateMenu(),
-		new RemoveDash(),
-		// new AnimationSpeed(),
-		new MenuButtons(),
-		new ReducePanelMargin(),
-		new NemoDesktopIntegration(),
-		new ChangeWorkspaceEasing(),
-		new MoveNotification(),
-		new StartupNoOverview(),
-		// new TransparentPanel(),
-		new MinimizeAnimation(),
-		// new AddDateMenuIcon(),
-		new MoveAnimation(),
-		new OpenCloseAnimation(),
-		new ThemeHandle(),
-		// new LapyIsCute(),
-		new Waydroid(),
-		new TrayiconBugfix(),
-		// new GnomeTerminalBlur(),
-		new FocusIn(),
-		new InputMethodChanger(),
-		new CursorFix(),
-		// new Blackout(),
-		new Wireframe(),
-	]
-	if (verbose) {
-		last = +Date.now()
-		log("[QE] Taken " + (last - start) + "ms")
-		log("[QE] execute enable() forEach")
-	}
-	for (const item of enabledList) {
-		item.enable()
+	
+		log("[QE] Init classes")
+		this.enabledList = [
+			// new FuckYouKakaoTalk(),
+			new EdgeTmpHide(),
+			// new EdgeDragWorkspaceSwitches(),
+			new RemoveAppMenu(),
+			// new NoAnnoyance(),
+			new PanelDateFormat(),
+			// new WorkspacesBarHandler(),
+			new TopbarScroll(),
+			// new RemoveAltTabDelay(),
+			new MoveDateMenu(),
+			new RemoveDash(),
+			// new AnimationSpeed(),
+			new MenuButtons(),
+			new ReducePanelMargin(),
+			new NemoDesktopIntegration(),
+			new ChangeWorkspaceEasing(),
+			new MoveNotification(),
+			new StartupNoOverview(),
+			// new TransparentPanel(),
+			new MinimizeAnimation(),
+			// new AddDateMenuIcon(),
+			new MoveAnimation(),
+			new OpenCloseAnimation(),
+			new ThemeHandle(),
+			// new LapyIsCute(),
+			// new Waydroid(),
+			// new TrayiconBugfix(),
+			// new GnomeTerminalBlur(),
+			new FocusIn(),
+			new InputMethodChanger(),
+			// new CursorFix(),
+			// new Blackout(),
+			new Wireframe(),
+		]
 		if (verbose) {
-			now = +Date.now()
-			log("[QE] | Loaded " + item.constructor.name + " taken "+ (now - last) + "ms")
-			last = now
+			this.last = +Date.now()
+			log("[QE] Taken " + (this.last - this.start) + "ms")
+			log("[QE] execute enable() forEach")
 		}
+		for (const item of this.enabledList) {
+			item.enable(this)
+			if (verbose) {
+				this.now = +Date.now()
+				log("[QE] | Loaded " + item.constructor.name + " taken "+ (this.now - this.last) + "ms")
+				this.last = this.now
+			}
+		}
+		this.enabledList.reverse()
+		log("[QE] Loaded! taken " + (+Date.now() - this.start) + "ms")
 	}
-	enabledList.reverse()
-	log("[QE] Loaded! taken " + (+Date.now() - start) + "ms")
-}
-
-function disable() {
-	if (!enabledList) return
-	for (const item of enabledList) item.disable()
-	for (const item of ExtensionHandlers) item.disable()
-	enabledList = null
+	
+	disable() {
+		if (!this.enabledList) return
+		for (const item of this.enabledList) item.disable()
+		for (const item of ExtensionHandlers) item.disable()
+		this.enabledList = null
+	}
 }

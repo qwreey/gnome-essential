@@ -1,14 +1,23 @@
-const { St, GLib, Meta, Shell, Clutter } = imports.gi
-const Main = imports.ui.main
+import Meta from "gi://Meta"
+import GLib from "gi://GLib"
+import St from "gi://St"
+import Clutter from "gi://Clutter"
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
 
-const PointerWatcher = imports.ui.pointerWatcher
-const ExtensionUtils = imports.misc.extensionUtils
-const Me = ExtensionUtils.getCurrentExtension()
-const { getShadowSize, PointerMovePreventer, FakePointer, resizingOps, Maid, PointerUtil, getOffset, applyOffset, WindowMover } = Me.imports.libs.utility
-
+import {
+    getShadowSize,
+    PointerMovePreventer,
+    FakePointer,
+    resizingOps,
+    Maid,
+    PointerUtil,
+    getOffset,
+    applyOffset,
+    WindowMover,
+} from "./libs/utility.js"
 // TODO: 쉬프트키 누르면 창에 붙도록. 이건 타일링어시스턴트 코드 참조하자
 
-var Wireframe = class Wireframe {
+export class Wireframe {
 	#pointerMovePreventer
 	#fakePointer
 	#maid

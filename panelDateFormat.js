@@ -1,8 +1,9 @@
-const { GLib, St, Clutter, Pango } = imports.gi
-const Main = imports.ui.main
-const ExtensionUtils = imports.misc.extensionUtils
+import GLib from "gi://GLib"
+import St from "gi://St"
+import Clutter from "gi://Clutter"
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
 
-var PanelDateFormat = class PanelDateFormat {
+export class PanelDateFormat {
 	constructor() {}
 
 	/**

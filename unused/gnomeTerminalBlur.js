@@ -1,8 +1,6 @@
-const { Meta } = imports.gi
-const ExtensionUtils = imports.misc.extensionUtils
-const Me = ExtensionUtils.getCurrentExtension()
-
-const { WindowInitedHandler, StaticBlur, getShadowSize, isNormal } = Me.imports.libs.utility
+import {
+	WindowInitedHandler, StaticBlur, getShadowSize, isNormal
+} from "./libs/utility.js"
 
 var GnomeTerminalBlur = class GnomeTerminalBlur {
     constructor() {}

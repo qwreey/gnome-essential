@@ -1,9 +1,9 @@
 
-const Main = imports.ui.main
-const Clutter = imports.gi.Clutter
-const Meta = imports.gi.Meta
+import Meta from "gi://Meta"
+import Clutter from "gi://Clutter"
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
 
-var TopbarScroll = class TopbarScroll {
+export class TopbarScroll {
 	constructor() {
 		this.panel = Main.panel
 		this.panelBinding = null

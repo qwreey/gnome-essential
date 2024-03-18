@@ -1,10 +1,7 @@
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
+import { ControlsState } from "resource:///org/gnome/shell/ui/overviewControls.js"
 
-
-
-const Main = imports.ui.main
-const ControlsState = imports.ui.overviewControls.ControlsState
-
-var StartupNoOverview = class StartupNoOverview {
+export class StartupNoOverview {
 	constructor() {}
 	enable() {
 		this.oldHasOverview = Main.sessionMode.hasOverview

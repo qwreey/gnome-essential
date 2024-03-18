@@ -1,13 +1,13 @@
-const { Clutter, Meta, GLib } = imports.gi
+import Clutter from "gi://Clutter"
+import Meta from "gi://Meta"
+import GLib from "gi://GLib"
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
 
-const Main = imports.ui.main;
-const ExtensionUtils = imports.misc.extensionUtils
-const Me = ExtensionUtils.getCurrentExtension()
-const { FocusArray } = Me.imports.libs.utility
+import { FocusArray } from "./libs/utility.js"
 
 const WINDOW_ANIMATION_TIME = 340//340;
 
-var ChangeWorkspaceEasing = class ChangeWorkspaceEasing {
+export class ChangeWorkspaceEasing {
 	constructor() {
 	}
 

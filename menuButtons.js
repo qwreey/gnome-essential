@@ -1,18 +1,17 @@
 
-const WorkspaceThumbnail = imports.ui.workspaceThumbnail
-const { Clutter, GObject, St } = imports.gi
-const { BoxLayout, Icon, Button } = St
-const PanelMenu = imports.ui.panelMenu
-const Main = imports.ui.main
-const Config = imports.misc.config
-const PopupMenu = imports.ui.popupMenu
+import Clutter from "gi://Clutter"
+import * as WorkspaceThumbnail from "resource:///org/gnome/shell/ui/workspaceThumbnail.js"
+import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js"
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
+import * as Config from "resource:///org/gnome/shell/misc/config.js"
+import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js"
 
 const Version = parseInt(Config.PACKAGE_VERSION.split('.')[0])
 const ShowAppsButton = Version == 3 ? Main.overview.viewSelector._showAppsButton : Main.overview.dash.showAppsButton
 const MainOverview = Version == 3 ? Main.overview.viewSelector : Main.overview.dash
 const OverviewShowApps = Version == 3 ? Main.overview.viewSelector : Main.overview
 
-var MenuButtons = class MenuButtons {
+export class MenuButtons {
 	constructor() {
 	}
 

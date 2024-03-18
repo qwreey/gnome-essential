@@ -1,5 +1,6 @@
 const SwitcherPopup = imports.ui.switcherPopup
-var RemoveAltTabDelay = class RemoveAltTabDelay {
+
+export class RemoveAltTabDelay {
 	constructor() {}
 	enable() {
 		this.old = SwitcherPopup.POPUP_DELAY_TIMEOUT
@@ -9,3 +10,5 @@ var RemoveAltTabDelay = class RemoveAltTabDelay {
 		SwitcherPopup.POPUP_DELAY_TIMEOUT = this.old
 	}
 }
+
+// In gnome 45.5, this is not required.

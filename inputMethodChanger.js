@@ -1,10 +1,10 @@
-const { Meta, Shell, GLib } = imports.gi
-const Main = imports.ui.main
-const ExtensionUtils = imports.misc.extensionUtils
-const Me = ExtensionUtils.getCurrentExtension()
-const { getInputSourceManager } = imports.ui.status.keyboard
+import Meta from "gi://Meta"
+import GLib from "gi://GLib"
+import Shell from "gi://Shell"
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
+import { getInputSourceManager } from "resource:///org/gnome/shell/ui/status/keyboard.js"
 
-var InputMethodChanger = class InputMethodChanger {
+export class InputMethodChanger {
     #settings
     #inputSourceManager
     constructor() {}
@@ -33,9 +33,9 @@ var InputMethodChanger = class InputMethodChanger {
         this.apply(nextSource)
     }
 
-    enable() {
+    enable(extension) {
         this.#inputSourceManager = getInputSourceManager()
-        this.#settings = ExtensionUtils.getSettings()
+        this.#settings = extension.getSettings()
         Main.wm.addKeybinding(
             'qe-input-method-change',
             this.#settings,

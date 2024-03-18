@@ -1,22 +1,26 @@
 // this module exports many useful functions
 // for simplify main codes
-const { Meta, St, GLib, Shell, Clutter, Gio } = imports.gi
-const Main = imports.ui.main
-const Layout = imports.ui.layout
-const PointerWatcher = imports.ui.pointerWatcher
-const Magnifier = imports.ui.magnifier
-const ExtensionUtils = imports.misc.extensionUtils
+import Meta from "gi://Meta"
+import GLib from "gi://GLib"
+import St from "gi://St"
+import Shell from "gi://Shell"
+import Clutter from "gi://Clutter"
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
+import * as Layout from "resource:///org/gnome/shell/ui/layout.js"
+import * as PointerWatcher from "resource:///org/gnome/shell/ui/pointerWatcher.js"
+import * as Magnifier from "resource:///org/gnome/shell/ui/magnifier.js"
+import * as ExtensionUtils from "resource:///org/gnome/shell/misc/extensionUtils.js"
 
 // Logging
-function logger(str) {
+export function logger(str) {
 	log("[EXTENSION QE] " + str)
 }
-function error(str) {
+export function error(str) {
 	logError("[EXTENSION QE] " + str)
 }
 
 // Connection destroyer
-var Maid = class Maid {
+export class Maid {
 	#records
 	#TaskType = {
 		Connect: 0,
@@ -92,7 +96,7 @@ var Maid = class Maid {
 }
 
 // GObject signal alike event emitter
-var EventEmitter = class EventEmitter {
+export class EventEmitter {
 	#connections
 	#destroyed
 	#objects
@@ -207,7 +211,7 @@ var EventEmitter = class EventEmitter {
 }
 
 // Mouse move preventer
-var PointerMovePreventer = class PointerMovePreventer extends EventEmitter {
+export class PointerMovePreventer extends EventEmitter {
 	#pressureBarrier
 	#barrierOffset = 100
 	#events = [
@@ -322,7 +326,7 @@ var PointerMovePreventer = class PointerMovePreventer extends EventEmitter {
 }
 
 // Fake pointer
-var FakePointer = class FakeCursor {
+export class FakePointer {
 	#cursorSprite
 	#cursorActor
 	#visible
@@ -382,7 +386,7 @@ var FakePointer = class FakeCursor {
 }
 
 // Mouse pointer mover
-var PointerUtil = new class PointerUtil extends EventEmitter {
+export const PointerUtil = new class PointerUtil extends EventEmitter {
 	#defaltSeat
 	#cursorWatcher
 	#cursorWatch
@@ -482,7 +486,7 @@ var PointerUtil = new class PointerUtil extends EventEmitter {
 }
 
 // Window shadow size calc
-function getShadowSize(window) {
+export function getShadowSize(window) {
 	const { width: frameWidth, height: frameHeight, x: frameX, y: frameY } = window.get_frame_rect()
 	const { width: bufferWidth, height: bufferHeight, x: bufferX, y: bufferY } = window.get_buffer_rect()
 	const maximizedHorizontally = window.maximized_horizontally
@@ -510,7 +514,7 @@ function getShadowSize(window) {
 }
 
 // Caclulate resize animation size
-function getResizeAnimationSize(shadow,toX,toY,toWidth,toHeight) {
+export function getResizeAnimationSize(shadow,toX,toY,toWidth,toHeight) {
 	const widthWithShadow = toWidth + shadow.horizontal
 	const heightWithShadow = toHeight + shadow.vertical
 	const afterVerticalShadowRatio = shadow.vertical / heightWithShadow
@@ -560,7 +564,7 @@ function getResizeAnimationSize(shadow,toX,toY,toWidth,toHeight) {
 }
 
 // Background blur
-var StaticBlur = class StaticBlur {
+export class StaticBlur {
 	#blur
 	#sigma
 	#brightness
@@ -754,7 +758,7 @@ var StaticBlur = class StaticBlur {
 }
 
 // Window unresizer
-var Unresizabler = class Unresizabler {
+export class Unresizabler {
 	resizeOps = [
 		Meta.GrabOp.RESIZING_E,
 		Meta.GrabOp.RESIZING_N,
@@ -803,7 +807,7 @@ var Unresizabler = class Unresizabler {
 }
 
 // Window init handler
-var WindowInitedHandler = class WindowInitedHandler {
+export class WindowInitedHandler {
 	#initWindow
 	#uninitWindow
 	#filter
@@ -888,187 +892,187 @@ var WindowInitedHandler = class WindowInitedHandler {
 }
 
 // Window Types
-const focusableWindowTypes = [
+export const focusableWindowTypes = [
 	Meta.WindowType.NORMAL,
 	Meta.WindowType.DIALOG,
 	Meta.WindowType.MODAL_DIALOG,
 ]
-function isFocusable(window) {
+export function isFocusable(window) {
 	return focusableWindowTypes.includes(window.window_type)
 }
-function isNormal(window) {
+export function isNormal(window) {
 	return window.window_type === Meta.WindowType.NORMAL
 }
 
-const RENDER_DELAY = 3+1 // ignore initial call / first frame call (on resized) / after call (window redraw) + time to render window
+export const RENDER_DELAY = 3+1 // ignore initial call / first frame call (on resized) / after call (window redraw) + time to render window
 
-var WindowMover = class WindowMover {
-  constructor() {
-    this._windowAnimations = []
-  }
+export var WindowMover = class WindowMover {
+	constructor() {
+		this._windowAnimations = []
+	}
 
-  // deinit all animations
-  destroy() {
-    this._windowAnimations.forEach(animation=>this._destroyAnimation(animation))
-    this._windowAnimations = null
-  }
+	// deinit all animations
+	destroy() {
+		this._windowAnimations.forEach(animation=>this._destroyAnimation(animation))
+		this._windowAnimations = null
+	}
 
-  // capture window content and create clone clutter
-  _captureWindow(window_actor,rect) {
-    return new Clutter.Actor({
-      height: rect.height,
-      width: rect.width,
-      x: rect.x,
-      y: rect.y,
-      content: window_actor.paint_to_content(null)
-    })
-  }
+	// capture window content and create clone clutter
+	_captureWindow(window_actor,rect) {
+		return new Clutter.Actor({
+			height: rect.height,
+			width: rect.width,
+			x: rect.x,
+			y: rect.y,
+			content: window_actor.paint_to_content(null)
+		})
+	}
 
-  // give time to redraw it selfs to application
-  // If canceled, return true
-  _delayFrames(actor,animation) {
-    return new Promise(resolve=>{
-      const timeline = animation.timeline = new Clutter.Timeline({ actor:actor,duration: 1000 })
-      let count = 0
-      animation.resolve = resolve
-      animation.newframe = timeline.connect("new-frame",()=>{
-        if (++count < RENDER_DELAY) return 
-        timeline.disconnect(animation.newframe)
-        timeline.run_dispose()
-        animation.resolve = animation.newframe = animation.timeline = null
-        resolve()
-      })
-      timeline.start()
-    })
-  }
+	// give time to redraw it selfs to application
+	// If canceled, return true
+	_delayFrames(actor,animation) {
+		return new Promise(resolve=>{
+			const timeline = animation.timeline = new Clutter.Timeline({ actor:actor,duration: 1000 })
+			let count = 0
+			animation.resolve = resolve
+			animation.newframe = timeline.connect("new-frame",()=>{
+				if (++count < RENDER_DELAY) return 
+				timeline.disconnect(animation.newframe)
+				timeline.run_dispose()
+				animation.resolve = animation.newframe = animation.timeline = null
+				resolve()
+			})
+			timeline.start()
+		})
+	}
 
-  // destroy last animation, Also cancel delayFraems
-  _destroyAnimation(animation,keepTransitions) {
-    const actor = animation.actor
+	// destroy last animation, Also cancel delayFraems
+	_destroyAnimation(animation,keepTransitions) {
+		const actor = animation.actor
 
-    // remove animation from lists
-    const index = this._windowAnimations.indexOf(animation)
-    if (index != -1) this._windowAnimations.splice(index,1)
-    
-    // kill transitions
-    if (!keepTransitions) {
-      animation?.clone?.remove_all_transitions()
-      animation?.clone?.destroy()
-      if (actor) {
-        actor.remove_all_transitions()
-        actor.scale_x = 1
-        actor.scale_y = 1
-        actor.translation_x = 0
-        actor.translation_y = 0
-      }
-      animation.clone = animation.actor = animation.window = null
-    }
+		// remove animation from lists
+		const index = this._windowAnimations.indexOf(animation)
+		if (index != -1) this._windowAnimations.splice(index,1)
+		
+		// kill transitions
+		if (!keepTransitions) {
+			animation?.clone?.remove_all_transitions()
+			animation?.clone?.destroy()
+			if (actor) {
+				actor.remove_all_transitions()
+				actor.scale_x = 1
+				actor.scale_y = 1
+				actor.translation_x = 0
+				actor.translation_y = 0
+			}
+			animation.clone = animation.actor = animation.window = null
+		}
 
-    // kill last delay
-    const timeline = animation?.timeline
-    if (timeline) {
-      timeline.disconnect(animation.newframe)
-      timeline.run_dispose()
-      const resolve = animation.resolve
-      actor.thaw()
-      animation.resolve = animation.newframe = animation.timeline = null
-      resolve(true)
-    }
-  }
+		// kill last delay
+		const timeline = animation?.timeline
+		if (timeline) {
+			timeline.disconnect(animation.newframe)
+			timeline.run_dispose()
+			const resolve = animation.resolve
+			actor.thaw()
+			animation.resolve = animation.newframe = animation.timeline = null
+			resolve(true)
+		}
+	}
 
-  async setWindowRect(window, x, y, width, height, animate, clone, beforeShadow) {
+	async setWindowRect(window, x, y, width, height, animate, clone, beforeShadow) {
 	if (!animate) {
 		clone.destroy()
 		clone = null
 	}
-    const actor = window.get_compositor_private()
-    const lastAnimation = this._windowAnimations.find(item=>item.window === window)
-    const thisAnimation = {}
+		const actor = window.get_compositor_private()
+		const lastAnimation = this._windowAnimations.find(item=>item.window === window)
+		const thisAnimation = {}
 
-    // Calculate before size / position
+		// Calculate before size / position
 	beforeShadow ??= getShadowSize(window)
 	const animationSize = getResizeAnimationSize(beforeShadow,x,y,width,height)
 
-    // destroy last animation and freeze actor
-    if (lastAnimation) this._destroyAnimation(lastAnimation,animate) // destroy old animation (but keep keep transitions for smoother)
-    actor.freeze() // do not render while real resizing done
+		// destroy last animation and freeze actor
+		if (lastAnimation) this._destroyAnimation(lastAnimation,animate) // destroy old animation (but keep keep transitions for smoother)
+		actor.freeze() // do not render while real resizing done
 
-    // unmaximize
-    if (beforeShadow.maximized) {
-      // clone actor before unmaximize for animate maxed -> tiled
-      clone ??= animate && this._captureWindow(actor,actor)
-      window.unmaximize(Meta.MaximizeFlags.BOTH)
-      actor.remove_all_transitions() // remove unmaximize animation
-    }
+		// unmaximize
+		if (beforeShadow.maximized) {
+			// clone actor before unmaximize for animate maxed -> tiled
+			clone ??= animate && this._captureWindow(actor,actor)
+			window.unmaximize(Meta.MaximizeFlags.BOTH)
+			actor.remove_all_transitions() // remove unmaximize animation
+		}
 
-    // in another workspace
-    if (!window.showing_on_its_workspace()) {
-      if (lastAnimation) this._destroyAnimation(lastAnimation,animate)
-      window.move_resize_frame(true, x, y, width, height)
-      actor.thaw()
-      return
-    }
+		// in another workspace
+		if (!window.showing_on_its_workspace()) {
+			if (lastAnimation) this._destroyAnimation(lastAnimation,animate)
+			window.move_resize_frame(true, x, y, width, height)
+			actor.thaw()
+			return
+		}
 
-    // save this animation / clone window
-    if (animate) {
-      thisAnimation.clone = clone ??= this._captureWindow(actor,actor)
-      thisAnimation.window = window
-      thisAnimation.actor = actor
-      this._windowAnimations.push(thisAnimation)
-    }
+		// save this animation / clone window
+		if (animate) {
+			thisAnimation.clone = clone ??= this._captureWindow(actor,actor)
+			thisAnimation.window = window
+			thisAnimation.actor = actor
+			this._windowAnimations.push(thisAnimation)
+		}
 
-    // resize meta window / wait for window ready
-    window.move_resize_frame(true, x, y, width, height)
+		// resize meta window / wait for window ready
+		window.move_resize_frame(true, x, y, width, height)
 	window.move_frame(true,x,y) // some buggy window require this... (eg: gnome terminal)
-    if (!animate) { // if no animate
-      actor.thaw() // allow render window
-      return
-    }
-    const resultDelay = await this._delayFrames(actor,thisAnimation) // wait once for window size updating
-    if (lastAnimation) this._destroyAnimation(lastAnimation) // remove old transitions (actor easing)
-    if (resultDelay) return // If canceled, just return
-    if (clone.get_parent() === null) global.window_group.insert_child_above(clone,actor) // insert clone on screen
+		if (!animate) { // if no animate
+			actor.thaw() // allow render window
+			return
+		}
+		const resultDelay = await this._delayFrames(actor,thisAnimation) // wait once for window size updating
+		if (lastAnimation) this._destroyAnimation(lastAnimation) // remove old transitions (actor easing)
+		if (resultDelay) return // If canceled, just return
+		if (clone.get_parent() === null) global.window_group.insert_child_above(clone,actor) // insert clone on screen
 
-    // Set real window actor position
-    actor.scale_x = animationSize.actorInitScaleX
-    actor.scale_y = animationSize.actorInitScaleY
-    actor.translation_x = animationSize.actorTranslationX
-    actor.translation_y = animationSize.actorTranslationY
+		// Set real window actor position
+		actor.scale_x = animationSize.actorInitScaleX
+		actor.scale_y = animationSize.actorInitScaleY
+		actor.translation_x = animationSize.actorTranslationX
+		actor.translation_y = animationSize.actorTranslationY
 	actor.show()
-    actor.thaw() // allow render window
+		actor.thaw() // allow render window
 
-    // Clone animation
-    clone.ease_property('opacity', 0, {
-      duration: 220,
-      mode: Clutter.AnimationMode.EASE_OUT_QUART
-    })
-    clone.ease({
-      scale_x: animationSize.cloneGoalScaleX,
-      scale_y: animationSize.cloneGoalScaleY,
-      x: animationSize.cloneGoalX,
-      y: animationSize.cloneGoalY,
-      duration: 385,//375,
-      mode: Clutter.AnimationMode.EASE_OUT_EXPO,//EASE_OUT_QUINT,
-    })
+		// Clone animation
+		clone.ease_property('opacity', 0, {
+			duration: 220,
+			mode: Clutter.AnimationMode.EASE_OUT_QUART
+		})
+		clone.ease({
+			scale_x: animationSize.cloneGoalScaleX,
+			scale_y: animationSize.cloneGoalScaleY,
+			x: animationSize.cloneGoalX,
+			y: animationSize.cloneGoalY,
+			duration: 385,//375,
+			mode: Clutter.AnimationMode.EASE_OUT_EXPO,//EASE_OUT_QUINT,
+		})
 
-    // Real window animation
-    actor.ease({
-      scale_x: 1,
-      scale_y: 1,
-      translation_x: 0,
-      translation_y: 0,
-      duration: 385,//,375,
-      mode: Clutter.AnimationMode.EASE_OUT_EXPO,//EASE_OUT_QUINT,
-      onStopped: ()=>{
-        const nowAnimation = this._windowAnimations.find(item=>item.window === window)
-        if (nowAnimation?.clone === clone) this._destroyAnimation(nowAnimation)
-      }
-    })
-  }
+		// Real window animation
+		actor.ease({
+			scale_x: 1,
+			scale_y: 1,
+			translation_x: 0,
+			translation_y: 0,
+			duration: 385,//,375,
+			mode: Clutter.AnimationMode.EASE_OUT_EXPO,//EASE_OUT_QUINT,
+			onStopped: ()=>{
+				const nowAnimation = this._windowAnimations.find(item=>item.window === window)
+				if (nowAnimation?.clone === clone) this._destroyAnimation(nowAnimation)
+			}
+		})
+	}
 }
 
 // Grap ops
-var resizingOps = [
+export const resizingOps = [
 	Meta.GrabOp.RESIZING_N,
 	Meta.GrabOp.RESIZING_NE,
 	Meta.GrabOp.RESIZING_NW,
@@ -1079,7 +1083,7 @@ var resizingOps = [
 	Meta.GrabOp.RESIZING_SW,
 ]
 
-function set(obj,props) {
+export function set(obj,props) {
 	for (const index in props) {
 		obj[index] = props[index]
 	}
@@ -1087,7 +1091,7 @@ function set(obj,props) {
 }
 
 // Safe destroy
-function safeDestroy(...actors) {
+export function safeDestroy(...actors) {
 	for (const actor of actors) {
 		if (actor === undefined || actor === null || actors.__destroyed) continue
 		if (actor.is_destroyed && actor.is_destroyed()) continue
@@ -1099,7 +1103,7 @@ function safeDestroy(...actors) {
 }
 
 // Focus array
-var FocusArray = new class FocusArray {
+export const FocusArray = new class FocusArray {
 	array
 	#settings
 	#windowInitedHandler
@@ -1143,10 +1147,10 @@ var FocusArray = new class FocusArray {
 		if (window._focus_array_focus) window.disconnect(window._focus_array_focus)
 	}
 
-	enable() {
+	enable(extension) {
 		global.focusArray = this
 		this.array = []
-		this.#settings = ExtensionUtils.getSettings()
+		this.#settings = extension.getSettings()
 
 		// Load saved windows
 		const windowList = global.get_window_actors()
@@ -1192,17 +1196,17 @@ var FocusArray = new class FocusArray {
 	}
 }
 
-function getOffset(from,to) {
+export function getOffset(from,to) {
 	const result = []
 	from.forEach((value,index)=>result.push(to[index]-value))
 	return result
 }
-function applyOffset(from,offset) {
+export function applyOffset(from,offset) {
 	const result = []
 	from.forEach((value,index)=>result.push(value-offset[index]))
 	return result
 }
-function clamp(x,a,b) {
+export function clamp(x,a,b) {
 	if (b<a) {
 		const tmp = a
 		a=b
@@ -1212,7 +1216,7 @@ function clamp(x,a,b) {
 }
 
 // Items which should be enabled when plugin running
-var ExtensionHandlers = [
+export const ExtensionHandlers = [
 	FocusArray,
 	PointerUtil,
 ]

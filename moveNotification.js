@@ -1,3 +1,7 @@
+import Clutter from "gi://Clutter"
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
+import * as MessageTray from "resource:///org/gnome/shell/ui/messageTray.js"
+
 const XY_POSITION = {
 	TOP_START: 0,
 	TOP_CENTER: 1,
@@ -10,11 +14,7 @@ const XY_POSITION = {
 	CENTER_END: 8,
 }
 
-const Main = imports.ui.main
-const messageTrayClass = imports.ui.messageTray
-const { Clutter } = imports.gi
-
-var MoveNotification = class MoveNotification {
+export class MoveNotification {
 	constructor() {
 		this._originals = {}
 	}
@@ -64,8 +64,8 @@ var MoveNotification = class MoveNotification {
 		// with clutter animation mode set to EASE.
 		// because the EASE_OUT_BACK (original code) causes glitch when
 		// the tray is on bottom 
-		const State = messageTrayClass.State
-		const ANIMATION_TIME = messageTrayClass.ANIMATION_TIME
+		const State = MessageTray.State
+		const ANIMATION_TIME = MessageTray.ANIMATION_TIME
 	
 		messageTray._hideNotification = function (animate) {
 			messageTray._notificationFocusGrabber.ungrabFocus()

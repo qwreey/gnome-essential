@@ -1,5 +1,6 @@
-const { Clutter } = imports.gi
-const Main = imports.ui.main
+import Clutter from "gi://Clutter"
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
+
 // const RENDER_DELAY = 4
 const RENDER_DELAY = 8
 
@@ -108,7 +109,7 @@ class AnimationHandler {
 	}
 }
 
-var MinimizeAnimation = class MinimizeAnimation {
+export class MinimizeAnimation {
 	constructor() {}
 
 	enable() {

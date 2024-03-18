@@ -1,19 +1,19 @@
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
 
-const Main = imports.ui.main;
-const Dash = Main.overview.dash;
-
-var RemoveDash = class RemoveDash {
+export class RemoveDash {
 	constructor() {
 	}
 
 	enable() {
-		Dash.visible = false
-		this.height = Dash.height
-		Dash.height = 80
+		this.dash = Main.overview.dash
+		this.dash.visible = false
+		this.height = this.dash.height
+		this.dash.height = 80
 	}
 
 	disable() {
-		Dash.visible = true
-		Dash.height = this.height
+		this.dash.visible = true
+		this.dash.height = this.height
+		this.dash = null
 	}
 }

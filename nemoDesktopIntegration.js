@@ -1,9 +1,11 @@
-const Main = imports.ui.main
-const { Gio, Meta, Shell, GLib } = imports.gi
-const ExtensionUtils = imports.misc.extensionUtils
-const Me = ExtensionUtils.getCurrentExtension()
+import Meta from "gi://Meta"
+import GLib from "gi://GLib"
+import Shell from "gi://Shell"
+import Gio from "gi://Gio"
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
+import * as ExtensionUtils from "resource:///org/gnome/shell/misc/extensionUtils.js"
 
-var NemoDesktopIntegration = class NemoDesktopIntegration {
+export class NemoDesktopIntegration {
 	constructor() {}
 	#nemo
 	#settings
@@ -32,9 +34,9 @@ var NemoDesktopIntegration = class NemoDesktopIntegration {
 		)
 	}
 
-	enable() {
+	enable(extension) {
 		this.#nemo = new Gio.Settings({ schema: 'org.nemo.desktop' })
-		this.#settings = ExtensionUtils.getSettings()
+		this.#settings = extension.getSettings()
 		Main.wm.addKeybinding(
 			'qe-backgroundicon',
 			this.#settings,

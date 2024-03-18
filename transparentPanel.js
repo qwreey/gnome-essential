@@ -1,7 +1,7 @@
 
-const Main = imports.ui.main
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
 
-var TransparentPanel = class TransparentPanel {
+export class TransparentPanel {
 	constructor () {}
 
 	enable() {

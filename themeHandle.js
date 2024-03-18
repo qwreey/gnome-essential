@@ -1,8 +1,8 @@
-const { GLib, Gio, Meta, Shell } = imports.gi
-const Main = imports.ui.main
-const ExtensionUtils = imports.misc.extensionUtils
-const Me = ExtensionUtils.getCurrentExtension()
-const ExtensionDir = Me.dir.get_path()
+import Meta from "gi://Meta"
+import GLib from "gi://GLib"
+import Shell from "gi://Shell"
+import Gio from "gi://Gio"
+import * as Main from "resource:///org/gnome/shell/ui/main.js"
 
 /* exported getThemeDirs getModeThemeDirs */
 const fn = (...args) => GLib.build_filenamev(args)
@@ -26,15 +26,15 @@ function getModeThemeDirs() {
         .map(dir => fn(dir, 'gnome-shell', 'theme'))
 }
 
-var ThemeHandle = class ThemeHandle {
+export class ThemeHandle {
     #interface
     #settings
     #lightThemeName = "Colloid-Purple-Light-Compact"//"Catppuccin-Latte-Compact-Mauve-Light"
     #darkThemeName = "Colloid-Purple-Dark-Compact"//"Catppuccin-Mocha-Compact-Mauve-Dark"
-    #darkScript = ExtensionDir+"/dark.sh"
-    #lightScript = ExtensionDir+"/light.sh"
-    #darkBackground = ExtensionDir+"/dark.png"
-    #lightBackground = ExtensionDir+"/light.png"
+    #darkScript
+    #lightScript
+    #darkBackground
+    #lightBackground
     #currentGtkTheme
 
     getStylesheet(themeName) {
@@ -79,10 +79,15 @@ var ThemeHandle = class ThemeHandle {
 
     constructor() {}
 
-    enable() {
+    enable(extension) {
+        this.#darkScript = extension.path+"/dark.sh"
+        this.#lightScript = extension.path+"/light.sh"
+        this.#darkBackground = extension.path+"/dark.png"
+        this.#lightBackground = extension.path+"/light.png"
+
         this.#currentGtkTheme = null
         this.#interface = new Gio.Settings({ schema: 'org.gnome.desktop.interface' })
-        this.#settings = ExtensionUtils.getSettings()
+        this.#settings = extension.getSettings()
 
         // Add keybinding
         Main.wm.addKeybinding(
