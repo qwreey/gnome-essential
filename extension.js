@@ -52,7 +52,7 @@ const { GnomeTerminalBlur } = Me.imports.gnomeTerminalBlur
 const { FocusIn } = Me.imports.focusin
 const { InputMethodChanger } = Me.imports.inputMethodChanger
 const { CursorFix } = Me.imports.cursorFix
-const { Blackout } = Me.imports.blackout
+// const { Blackout } = Me.imports.blackout
 const { Wireframe } = Me.imports.wireframe
 
 const verbose = true
@@ -103,7 +103,7 @@ function enable() {
 		new FocusIn(),
 		new InputMethodChanger(),
 		new CursorFix(),
-		new Blackout(),
+		// new Blackout(),
 		new Wireframe(),
 	]
 	if (verbose) {
