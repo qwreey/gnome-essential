@@ -1075,7 +1075,7 @@ export var WindowMover = class WindowMover {
 		actor.scale_y = animationSize.actorInitScaleY
 		actor.translation_x = animationSize.actorTranslationX
 		actor.translation_y = animationSize.actorTranslationY
-	actor.show()
+		actor.show()
 		actor.thaw() // allow render window
 
 		// Clone animation
@@ -1107,18 +1107,6 @@ export var WindowMover = class WindowMover {
 		})
 	}
 }
-
-// Grap ops
-export const resizingOps = [
-	Meta.GrabOp.RESIZING_N,
-	Meta.GrabOp.RESIZING_NE,
-	Meta.GrabOp.RESIZING_NW,
-	Meta.GrabOp.RESIZING_E,
-	Meta.GrabOp.RESIZING_W,
-	Meta.GrabOp.RESIZING_S,
-	Meta.GrabOp.RESIZING_SE,
-	Meta.GrabOp.RESIZING_SW,
-]
 
 export function set(obj,props) {
 	for (const index in props) {
@@ -1252,8 +1240,119 @@ export function clamp(x,a,b) {
 	return Math.min(Math.max(x,a),b)
 }
 
+export const Pannel = new class Pannel {
+	constructor() {}
+	/** @type { Maid } */
+	#Maid
+	enable() {
+		this.#Maid = new Maid()
+		this.#Maid.connectJob(Main.panel._leftBox,"child-added",this.reorder.bind(this))
+		this.#Maid.connectJob(Main.panel._rightBox,"child-added",this.reorder.bind(this))
+		this.#Maid.connectJob(Main.panel._centerBox,"child-added",this.reorder.bind(this))
+		this.items = []
+		this.reversedItems = []
+		this.reordering = false
+	}
+	disable() {
+		this.#Maid.clean()
+		this.#Maid = null
+		this.items = null
+		this.reordering = null
+		this.reversedItems = null
+	}
+
+	Left = 0;
+	Center = 1;
+	Right = 2;
+
+	add(item,side,index,name) {
+		if (index<0) {
+			this.reversedItems.push({item,side,index: -index,name})
+		} else {
+			this.items.push({item,side,index,name})
+		}
+
+		return ()=>{
+			this.remove(item)
+		}
+	}
+
+	removeFromPannel(item) {
+		const leftChild = Main.panel._leftBox.get_children()
+		const rightChild = Main.panel._rightBox.get_children()
+		const centerChild = Main.panel._centerBox.get_children()
+		if (leftChild.includes(item)) {
+			Main.panel._leftBox.remove_child(item)
+		} else if (rightChild.includes(item)) {
+			Main.panel._rightBox.remove_child(item)
+		} else if (centerChild.includes(item)) {
+			Main.panel._centerBox.remove_child(item)
+		}
+	}
+
+	resolveItems(items) {
+		return items.map(item=>{
+			const newItem = {}
+
+			if (typeof item.item === "function") {
+				newItem.item =
+					Main.panel._leftBox.get_children().find(item.item)
+					|| Main.panel._rightBox.get_children().find(item.item)
+					|| Main.panel._centerBox.get_children().find(item.item)
+			} else {
+				newItem.item = item.item
+			}
+			newItem.index = item.index
+			newItem.side = item.side
+			newItem.name = item.name
+
+			return newItem
+		})
+	}
+
+	remove(item) {
+		const i = this.items.indexOf(item)
+		const ri = this.reversedItems.indexOf(item)
+		if (i>0) {
+			this.items.splice(i,1)
+		} else if (ri>0) {
+			this.items.splice(ri,1)
+		}
+	}
+
+	reorder() {
+		if (this.reordering) return
+		try {
+			this.reordering = true
+			const resolvedItems = this.resolveItems(this.items).sort((a,b)=>a.index-b.index), resolvedReversedItems = this.resolveItems(this.reversedItems).sort((a,b)=>b.index-a.index)
+			resolvedItems.forEach(item=>this.removeFromPannel(item.item))
+			resolvedReversedItems.forEach(item=>this.removeFromPannel(item.item))
+			let idx=0
+			resolvedItems.forEach(item=>{
+				console.log(item.index,item.name)
+				if (!item.item) return
+				if (item.side == this.Left) Main.panel._leftBox.insert_child_at_index(item.item,idx++)
+				if (item.side == this.Right) Main.panel._rightBox.insert_child_at_index(item.item,idx++)
+				if (item.side == this.Center) Main.panel._centerBox.insert_child_at_index(item.item,idx++)
+			})
+			resolvedReversedItems.forEach(item=>{
+				if (!item.item) return
+				if (item.side == this.Left) Main.panel._leftBox.add_child(item.item)
+				if (item.side == this.Right) Main.panel._rightBox.add_child(item.item)
+				if (item.side == this.Center) Main.panel._centerBox.add_child(item.item)
+			})
+
+			this.reordering = false
+		} catch (e) {
+			this.reordering = false
+			throw e
+		}
+	}
+}
+
 // Items which should be enabled when plugin running
 export const ExtensionHandlers = [
 	FocusArray,
 	PointerUtil,
+	Pannel,
 ]

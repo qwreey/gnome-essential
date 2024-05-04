@@ -910,7 +910,8 @@ export class EdgeTmpHide {
 	enable(extension) {
 		this.settings = extension.getSettings()
 		this.hideOverlayHolder = new HideOverlayHolder()
-		this.hideOverlayHolder.leftSideDisabled = true
+		this.hideOverlayHolder.leftSideDisabled = false
+		this.hideOverlayHolder.rightSideDisabled = false
 		try {
 			this.hideOverlayHolder.load(
 				this.settings.get_string("qe-tmphide-last-windows")

@@ -8,7 +8,6 @@ import {
     getShadowSize,
     PointerMovePreventer,
     FakePointer,
-    resizingOps,
     Maid,
     PointerUtil,
     getOffset,
@@ -36,7 +35,6 @@ export class Wireframe {
 
 	grapBegin(_d ,window, op) {
 		const gop = new GrabOp(op)
-		console.log(op,gop.isResizing())
 		if (!gop.isResizing()) return
 	
 		// save positions

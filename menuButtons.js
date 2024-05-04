@@ -6,6 +6,7 @@ import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js"
 import * as Main from "resource:///org/gnome/shell/ui/main.js"
 import * as Config from "resource:///org/gnome/shell/misc/config.js"
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js"
+import { Pannel } from "./libs/utility.js"
 
 const Version = parseInt(Config.PACKAGE_VERSION.split('.')[0])
 const ShowAppsButton = Version == 3 ? Main.overview.viewSelector._showAppsButton : Main.overview.dash.showAppsButton
@@ -36,6 +37,7 @@ export class MenuButtons {
 		})
 		Main.panel.statusArea.activities.container.hide()
 		Main.panel.addToStatusArea('activitiesicons', this.mainMenu, 0, 'left')
+		Pannel.add(this.mainMenu,Pannel.Left,1,"mainmenu")
 
 		// create menu
 		this.wspopupMenu = new PanelMenu.Button(0.5, "Workspace Menu")
@@ -57,9 +59,13 @@ export class MenuButtons {
 			}
 		})
 		Main.panel.addToStatusArea('workspace menu', this.wspopupMenu, 1, 'left')
+		Pannel.add(this.wspopupMenu,Pannel.Left,2,"wspopup")
+		Pannel.reorder()
 	}
 	disable() {
 		// this.mainMenuButton.destroy(); this.mainMenuButton = null
+		Pannel.remove(this.mainMenu)
+		Pannel.remove(this.wspopupMenu)
 		this.mainMenu.destroy()
 		this.wspopup.destroy()
 		this.wspopupMenu.destroy()

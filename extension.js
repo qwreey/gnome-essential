@@ -27,7 +27,7 @@ import { MenuButtons } from "./menuButtons.js"
 // https://gitlab.gnome.org/jrahmatzadeh/just-perfection
 import { MoveNotification } from "./moveNotification.js"
 
-import { MoveDateMenu } from "./moveDateMenu.js"
+// import { MoveDateMenu } from "./moveDateMenu.js"
 import { RemoveDash } from "./removeDash.js"
 // import { AnimationSpeed } from "./animationSpeed.js"
 import { ReducePanelMargin } from "./reducePanelMargin.js"
@@ -53,6 +53,7 @@ import { InputMethodChanger } from "./inputMethodChanger.js"
 // import { CursorFix } from "./cursorFix.js"
 // import { Blackout } from "./blackout.js"
 import { Wireframe } from "./wireframe.js"
+import { ReorderPannel } from "./reorderPannel.js"
 
 const verbose = false
 
@@ -88,7 +89,8 @@ export default class MainExtension extends Extension {
 			// new WorkspacesBarHandler(),
 			new TopbarScroll(),
 			// new RemoveAltTabDelay(),
-			new MoveDateMenu(),
+			new ReorderPannel(),
+			// new MoveDateMenu(),
 			new RemoveDash(),
 			// new AnimationSpeed(),
 			new MenuButtons(),

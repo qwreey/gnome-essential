@@ -41,7 +41,7 @@ export class ChangeWorkspaceEasing {
 		// imports.ui.workspaceAnimation.WorkspaceAnimationController.prototype.animateSwitch = function (from, to, direction, onComplete) {
 			// //! >>>>>>>>> PATCH:NEMO_MOVING
 			// // Show nemo desktop in each workspaces
-			// if (!animation) {
+			if (!animation) {
 			// 	nemoBackgrounds = {}
 			// 	global.get_window_actors().forEach(window => {
 			// 		if (window.meta_window.get_wm_class() != "Nemo-desktop") return
@@ -58,9 +58,9 @@ export class ChangeWorkspaceEasing {
 			// 		}
 			// 		// window.hide()
 			// 	})
-			// 	aniId++;
-			// }
-			// let thisAniId = aniId;
+				aniId++;
+			}
+			let thisAniId = aniId;
 			// //! <<<<<<<<< PATCH:NEMO_MOVING
 
 			//! >>>>>>>>> PATCH:FREEZE

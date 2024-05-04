@@ -77,19 +77,19 @@
 	/* container */
 	spacing: 0px;
 }
-.QE-reduce-panel-margin  #panel .panel-button {
+.QE-reduce-panel-margin  #panel .panel-button:not(.asTaskbar-BaseIcon) {
 	/* button */
 	-natural-hpadding: 4px;
 	-minimum-hpadding: 4px;
 	padding-left: 0px;
 	padding-right: 0px;
 }
-.QE-reduce-panel-margin  #panel .panel-button > .system-status-icon {
+.QE-reduce-panel-margin  #panel .panel-button:not(.asTaskbar-BaseIcon) > .system-status-icon {
 	/* system icon container padding */
 	padding-left: 0px;
 	padding-right: 0px;
 }
-.QE-reduce-panel-margin #panel .panel-button .panel-status-indicators-box {
+.QE-reduce-panel-margin #panel .panel-button:not(.asTaskbar-BaseIcon) .panel-status-indicators-box {
 	/* system icon spacing (each margin) */
 	spacing: 0px;
 }
