@@ -19,7 +19,7 @@ export class ReorderPannel {
 			Pannel.add(
 				(item)=>item.first_child.style_class == "panel-button space-bar",
 				Pannel.Left,
-				3,
+				2,
 				"spacebar"
 			)
 		)
@@ -27,7 +27,7 @@ export class ReorderPannel {
 			Pannel.add(
 				Main.panel.statusArea.dateMenu.container,
 				Pannel.Left,
-				4,
+				3,
 				"datemenu"
 			)
 		)
@@ -35,7 +35,7 @@ export class ReorderPannel {
 			Pannel.add(
 				(item)=>item.first_child.constructor.name == "TopHatContainer",
 				Pannel.Left,
-				5,
+				4,
 				"tophat"
 			)
 		)

@@ -37,7 +37,7 @@ export class MenuButtons {
 		})
 		Main.panel.statusArea.activities.container.hide()
 		Main.panel.addToStatusArea('activitiesicons', this.mainMenu, 0, 'left')
-		Pannel.add(this.mainMenu,Pannel.Left,1,"mainmenu")
+		Pannel.add(this.mainMenu,Pannel.Left,0,"mainmenu")
 
 		// create menu
 		this.wspopupMenu = new PanelMenu.Button(0.5, "Workspace Menu")
@@ -59,7 +59,7 @@ export class MenuButtons {
 			}
 		})
 		Main.panel.addToStatusArea('workspace menu', this.wspopupMenu, 1, 'left')
-		Pannel.add(this.wspopupMenu,Pannel.Left,2,"wspopup")
+		Pannel.add(this.wspopup,Pannel.Left,1,"wspopup")
 		Pannel.reorder()
 	}
 	disable() {
