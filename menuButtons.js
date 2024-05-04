@@ -59,7 +59,7 @@ export class MenuButtons {
 			}
 		})
 		Main.panel.addToStatusArea('workspace menu', this.wspopupMenu, 1, 'left')
-		Pannel.add(this.wspopup,Pannel.Left,1,"wspopup")
+		Pannel.add(this.wspopupMenu,Pannel.Left,1,"wspopup")
 		Pannel.reorder()
 	}
 	disable() {
