@@ -8,8 +8,8 @@ import Clutter from "gi://Clutter"
 import * as Main from "resource:///org/gnome/shell/ui/main.js"
 import * as Layout from "resource:///org/gnome/shell/ui/layout.js"
 import * as PointerWatcher from "resource:///org/gnome/shell/ui/pointerWatcher.js"
-import * as Magnifier from "resource:///org/gnome/shell/ui/magnifier.js"
-import * as ExtensionUtils from "resource:///org/gnome/shell/misc/extensionUtils.js"
+// import * as Magnifier from "resource:///org/gnome/shell/ui/magnifier.js"
+// import * as ExtensionUtils from "resource:///org/gnome/shell/misc/extensionUtils.js"
 
 // Logging
 export function logger(str) {
@@ -267,7 +267,8 @@ export class PointerMovePreventer extends EventEmitter {
 	// Barrier handler
 	#createBarrier(cursorX,cursorY) {
 		this.#pressureBarrier.addBarrier(this.leftBarrier = new Meta.Barrier({
-			display: global.display,
+			// display: global.display,
+			backend: global.backend,
 			x1: cursorX,
 			x2: cursorX,
 			y1: Math.max(0,cursorY-this.#barrierOffset),
@@ -275,7 +276,8 @@ export class PointerMovePreventer extends EventEmitter {
 			directions: Meta.BarrierDirection.POSITIVE_X,
 		}))
 		this.#pressureBarrier.addBarrier(this.rightBarrier = new Meta.Barrier({
-			display: global.display,
+			// display: global.display,
+			backend: global.backend,
 			x1: cursorX+1,
 			x2: cursorX+1,
 			y1: Math.max(0,cursorY-this.#barrierOffset),
@@ -283,7 +285,8 @@ export class PointerMovePreventer extends EventEmitter {
 			directions: Meta.BarrierDirection.NEGATIVE_X,
 		}))
 		this.#pressureBarrier.addBarrier(this.topBarrier = new Meta.Barrier({
-			display: global.display,
+			// display: global.display,
+			backend: global.backend,
 			x1: Math.max(0,cursorX-this.#barrierOffset),
 			x2: Math.min(global.stage.width,cursorX+this.#barrierOffset),
 			y1: cursorY,
@@ -291,7 +294,8 @@ export class PointerMovePreventer extends EventEmitter {
 			directions: Meta.BarrierDirection.POSITIVE_Y,
 		}))
 		this.#pressureBarrier.addBarrier(this.bottomBarrier = new Meta.Barrier({
-			display: global.display,
+			// display: global.display,
+			backend: global.backend,
 			x1: Math.max(0,cursorX-this.#barrierOffset),
 			x2: Math.min(global.stage.width,cursorX+this.#barrierOffset),
 			y1: cursorY+1,
@@ -336,10 +340,10 @@ export class FakePointer {
 	constructor() {
 		this.#visible = false
 		this.#cursorSprite = new Clutter.Actor({ request_mode: Clutter.RequestMode.CONTENT_SIZE })
-		this.#cursorSprite.content = new Magnifier.MouseSpriteContent()
+		this.#cursorSprite.content = Main.magnifier._mouseSprite.content
 
 		this.#cursorActor = new Clutter.Actor()
-		this.#cursorActor.add_actor(this.#cursorSprite)
+		this.#cursorActor.add_child(this.#cursorSprite)
 	}
 
 	updateMouseSprite(sprite, xHot, yHot) {
@@ -560,6 +564,39 @@ export function getResizeAnimationSize(shadow,toX,toY,toWidth,toHeight) {
 		actorInitY,
 		actorTranslationX,
 		actorTranslationY,
+	}
+}
+
+export class GrabOp {
+	static NSEW_MASK          = 0b1111_0000_00000000
+	static NORTH              = 0b1000_0000_00000000
+	static SOUTH              = 0b0100_0000_00000000
+	static EAST               = 0b0010_0000_00000000
+	static WEST               = 0b0001_0000_00000000
+
+	static FLAG_KEYBOARD      = 0b0000_0001_00000000
+	static FLAG_UNKNOWN       = 0b0000_0010_00000000
+	static FLAG_UNCONSTRAINED = 0b0000_0100_00000000
+
+	static KEYBOARD_UNKNOWN   = 0b0000_0011_00000000
+
+	constructor(op) {
+		this.op = op
+	}
+
+	isMoving() {
+		return !this.isResizing()
+	}
+	isResizing() {
+		return (this.op & GrabOp.NSEW_MASK) != 0 || (this.op & GrabOp.KEYBOARD_UNKNOWN) == GrabOp.KEYBOARD_UNKNOWN
+	}
+	byKeyboard() {
+		return (this.op & GrabOp.FLAG_KEYBOARD) != 0
+	}
+	isFacing(...faces) {
+		let sumface = 0
+		faces.forEach(face=>sumface |= face)
+		return (this.op & GrabOp.NSEW_MASK) === sumface
 	}
 }
 

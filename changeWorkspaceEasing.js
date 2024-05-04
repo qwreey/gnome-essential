@@ -2,7 +2,7 @@ import Clutter from "gi://Clutter"
 import Meta from "gi://Meta"
 import GLib from "gi://GLib"
 import * as Main from "resource:///org/gnome/shell/ui/main.js"
-
+import { WorkspaceAnimationController,WorkspaceGroup } from "resource:///org/gnome/shell/ui/workspaceAnimation.js"
 import { FocusArray } from "./libs/utility.js"
 
 const WINDOW_ANIMATION_TIME = 340//340;
@@ -28,7 +28,7 @@ export class ChangeWorkspaceEasing {
 	}
 
 	enable() {
-		this.animateSwitch = imports.ui.workspaceAnimation.WorkspaceAnimationController.prototype.animateSwitch
+		// this.animateSwitch = imports.ui.workspaceAnimation.WorkspaceAnimationController.prototype.animateSwitch
 		// imports.ui.workspaceAnimation.WorkspaceAnimationController.prototype.animateSwitch = (from, to, direction, onComplete)=>{
 		// Main.wm._workspaceAnimation.animateSwitch = function (from, to, direction, onComplete) {
 		let animation = false
@@ -36,30 +36,32 @@ export class ChangeWorkspaceEasing {
 		let is_freezable = this.is_freezable.bind(this)
 		let nemoBackgrounds = {}
 		let aniId = 0
-		imports.ui.workspaceAnimation.WorkspaceAnimationController.prototype.animateSwitch = function (from, to, direction, onComplete) {
-			//! >>>>>>>>> PATCH:NEMO_MOVING
-			// Show nemo desktop in each workspaces
-			if (!animation) {
-				nemoBackgrounds = {}
-				global.get_window_actors().forEach(window => {
-					if (window.meta_window.get_wm_class() != "Nemo-desktop") return
-					let monitorIndex = window.meta_window.get_monitor()
-					if (nemoBackgrounds[monitorIndex]) return
-					let monitorGeometry = global.display.get_monitor_geometry(monitorIndex)
-					nemoBackgrounds[monitorIndex] = {
-						window,
-						monitorGeometry,
-						content: window.paint_to_content(null),
-						height: window.height,
-						width: window.width,
-						y: window.y - monitorGeometry.y,
-					}
-					// window.hide()
-				})
-				aniId++;
-			}
-			let thisAniId = aniId;
-			//! <<<<<<<<< PATCH:NEMO_MOVING
+
+		Main.wm._workspaceAnimation.animateSwitch = function (from, to, direction, onComplete) {
+		// imports.ui.workspaceAnimation.WorkspaceAnimationController.prototype.animateSwitch = function (from, to, direction, onComplete) {
+			// //! >>>>>>>>> PATCH:NEMO_MOVING
+			// // Show nemo desktop in each workspaces
+			// if (!animation) {
+			// 	nemoBackgrounds = {}
+			// 	global.get_window_actors().forEach(window => {
+			// 		if (window.meta_window.get_wm_class() != "Nemo-desktop") return
+			// 		let monitorIndex = window.meta_window.get_monitor()
+			// 		if (nemoBackgrounds[monitorIndex]) return
+			// 		let monitorGeometry = global.display.get_monitor_geometry(monitorIndex)
+			// 		nemoBackgrounds[monitorIndex] = {
+			// 			window,
+			// 			monitorGeometry,
+			// 			content: window.paint_to_content(null),
+			// 			height: window.height,
+			// 			width: window.width,
+			// 			y: window.y - monitorGeometry.y,
+			// 		}
+			// 		// window.hide()
+			// 	})
+			// 	aniId++;
+			// }
+			// let thisAniId = aniId;
+			// //! <<<<<<<<< PATCH:NEMO_MOVING
 
 			//! >>>>>>>>> PATCH:FREEZE
 			// freeze all window to skip all window buffer updates
@@ -151,76 +153,78 @@ export class ChangeWorkspaceEasing {
 			}
 		}
 
-		this.createWindow = imports.ui.workspaceAnimation.WorkspaceGroup.prototype._createWindows
-		imports.ui.workspaceAnimation.WorkspaceGroup.prototype._createWindows = function() {
-			let monitor = this._monitor
+		// this.createWindow = imports.ui.workspaceAnimation.WorkspaceGroup.prototype._createWindows
+		// imports.ui.workspaceAnimation.WorkspaceGroup.prototype._createWindows = function() {
+		// 	let monitor = this._monitor
 			
-			//! >>>>>>>>> PATCH:NEMO_MOVING
-			let nemoInfo = nemoBackgrounds[monitor.index]
-			if (nemoInfo && this._background) {
-				this.add_child(this.nemoCapture = new Clutter.Actor({
-					height: nemoInfo.height,
-					width: nemoInfo.width,
-					x: 0,
-					y: nemoInfo.y,
-					content: nemoInfo.content,
-				}))
-			}
-			//! <<<<<<<<< PATCH:NEMO_MOVING
+		// 	//! >>>>>>>>> PATCH:NEMO_MOVING
+		// 	let nemoInfo = nemoBackgrounds[monitor.index]
+		// 	if (nemoInfo && this._background) {
+		// 		this.add_child(this.nemoCapture = new Clutter.Actor({
+		// 			height: nemoInfo.height,
+		// 			width: nemoInfo.width,
+		// 			x: 0,
+		// 			y: nemoInfo.y,
+		// 			content: nemoInfo.content,
+		// 		}))
+		// 	}
+		// 	//! <<<<<<<<< PATCH:NEMO_MOVING
 
-			global.get_window_actors().forEach(window => {
-				if (window.meta_window.get_wm_class() == "Nemo-desktop") return
-				if (!this._shouldShowWindow(window.meta_window)) return
+		// 	global.get_window_actors().forEach(window => {
+		// 		if (window.meta_window.get_wm_class() == "Nemo-desktop") return
+		// 		if (!this._shouldShowWindow(window.meta_window)) return
 	
-				//! >>>>>>>>> PATCH:FPS_PATCH
-				// using capture instead of cloning, much better for fps
-				const capture = new Clutter.Actor({
-					height: window.height,
-					width: window.width,
-					x: window.x - monitor.x,
-					y: window.y - monitor.y,
-					content: window.paint_to_content(null)
-				})
-				this.add_child(capture)
+		// 		//! >>>>>>>>> PATCH:FPS_PATCH
+		// 		// using capture instead of cloning, much better for fps
+		// 		const capture = new Clutter.Actor({
+		// 			height: window.height,
+		// 			width: window.width,
+		// 			x: window.x - monitor.x,
+		// 			y: window.y - monitor.y,
+		// 			content: window.paint_to_content(null)
+		// 		})
+		// 		this.add_child(capture)
 	
-				const record = { windowActor: window, clone: capture }
+		// 		const record = { windowActor: window, clone: capture }
 
-				// window.connectObject('destroy', () => {
-				// 	capture.destroy()
-				// 	this._windowRecords.splice(this._windowRecords.indexOf(record), 1)
-				// }, this)
-				//! <<<<<<<<< PATCH:FPS_PATCH
+		// 		// window.connectObject('destroy', () => {
+		// 		// 	capture.destroy()
+		// 		// 	this._windowRecords.splice(this._windowRecords.indexOf(record), 1)
+		// 		// }, this)
+		// 		//! <<<<<<<<< PATCH:FPS_PATCH
 	
-				this._windowRecords.push(record)
-			})
-		}
+		// 		this._windowRecords.push(record)
+		// 	})
+		// }
 
-		imports.ui.workspaceAnimation.WorkspaceGroup.prototype._syncStacking = function() {
-			const windowActors = global.get_window_actors().filter(w =>
-				this._shouldShowWindow(w.meta_window));
+		// imports.ui.workspaceAnimation.WorkspaceGroup.prototype._syncStacking = function() {
+		// 	const windowActors = global.get_window_actors().filter(w =>
+		// 		this._shouldShowWindow(w.meta_window));
 	
-			let lastRecord;
-			const bottomActor = this._background ?? null;
+		// 	let lastRecord;
+		// 	const bottomActor = this._background ?? null;
 	
-			for (const windowActor of windowActors) {
-				const record = this._windowRecords.find(r => r.windowActor === windowActor);
-				if (!record?.clone) continue;
+		// 	for (const windowActor of windowActors) {
+		// 		const record = this._windowRecords.find(r => r.windowActor === windowActor);
+		// 		if (!record?.clone) continue;
 	
-				this.set_child_above_sibling(record.clone,
-					lastRecord ? lastRecord.clone : bottomActor);
-				lastRecord = record;
-			}
+		// 		this.set_child_above_sibling(record.clone,
+		// 			lastRecord ? lastRecord.clone : bottomActor);
+		// 		lastRecord = record;
+		// 	}
 
-			//! >>>>>>>>> PATCH:NEMO_MOVING
-			if (this.nemoCapture) {
-				this.set_child_above_sibling(this.nemoCapture,bottomActor)
-			}
-			//! <<<<<<<<< PATCH:NEMO_MOVING
-		}
+		// 	//! >>>>>>>>> PATCH:NEMO_MOVING
+		// 	if (this.nemoCapture) {
+		// 		this.set_child_above_sibling(this.nemoCapture,bottomActor)
+		// 	}
+		// 	//! <<<<<<<<< PATCH:NEMO_MOVING
+		// }
 	}
 
 	disable() {
-		imports.ui.workspaceAnimation.WorkspaceAnimationController.prototype.animateSwitch = this.animateSwitch
-		imports.ui.workspaceAnimation.WorkspaceGroup.prototype._createWindows = this.createWindow
+		// imports.ui.workspaceAnimation.WorkspaceAnimationController.prototype.animateSwitch = this.animateSwitch
+		// imports.ui.workspaceAnimation.WorkspaceGroup.prototype._createWindows = this.createWindow
+		Main.wm._workspaceAnimation.animateSwitch = WorkspaceAnimationController.animateSwitch
+		// Main.wm._workspaceAnimation._createWindows = WorkspaceAnimationController._createWindows
 	}
 }

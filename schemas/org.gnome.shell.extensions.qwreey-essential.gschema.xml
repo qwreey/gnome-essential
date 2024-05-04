@@ -7,13 +7,13 @@
 			<description>Format for the clock. Syntax https://developer.gnome.org/glib/stable/glib-GDateTime.html#g-date-time-format</description>
 		</key>
 		<key name="qe-themeswitch" type="as">
-			<default><![CDATA[['<Control><Super>t']]]></default>
+			<default><![CDATA[['<Alt><Super>t']]]></default>
 		</key>
 		<key name="qe-focusin" type="as">
-			<default><![CDATA[['<Control><Super>f']]]></default>
+			<default><![CDATA[['<Alt><Super>f']]]></default>
 		</key>
 		<key name="qe-backgroundicon" type="as">
-			<default><![CDATA[['<Control><Super>r']]]></default>
+			<default><![CDATA[['<Alt><Super>r']]]></default>
 		</key>
 		<key name="qe-input-method-change" type="as">
 			<default><![CDATA[['Alt_R','Hangul']]]></default>

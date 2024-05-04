@@ -83,7 +83,8 @@ export class EdgeDragWorkspaceSwitches {
 			}
 
 			this._leftBarrier = new Meta.Barrier({
-				display: global.display,
+				// display: global.display,
+				backend: global.backend,
 				x1: 0,
 				x2: 0,
 				y1: 0,
@@ -92,7 +93,8 @@ export class EdgeDragWorkspaceSwitches {
 			})
 
 			this._rightBarrier = new Meta.Barrier({
-				display: global.display,
+				// display: global.display,
+				backend: global.backend,
 				x1: global.stage.width,
 				x2: global.stage.width,
 				y1: 0,

@@ -13,10 +13,10 @@ import { TopbarScroll } from "./topbarScroll.js"
 // import { NoAnnoyance } from "./noAnnoyance.js"
 
 // https://extensions.gnome.org/extension/591/remove-app-menu/
-import { RemoveAppMenu } from "./removeAppMenu.js"
+// import { RemoveAppMenu } from "./removeAppMenu.js"
 
 // https://github.com/KEIII/gnome-shell-panel-date-format
-import { PanelDateFormat } from "./panelDateFormat.js"
+// import { PanelDateFormat } from "./panelDateFormat.js"
 
 // https://extensions.gnome.org/extension/2741/remove-alttab-delay-v2/
 // import { RemoveAltTabDelay } from "./removeAltTabDelay.js"
@@ -82,9 +82,9 @@ export default class MainExtension extends Extension {
 			// new FuckYouKakaoTalk(),
 			new EdgeTmpHide(),
 			// new EdgeDragWorkspaceSwitches(),
-			new RemoveAppMenu(),
+			// new RemoveAppMenu(),
 			// new NoAnnoyance(),
-			new PanelDateFormat(),
+			// new PanelDateFormat(),
 			// new WorkspacesBarHandler(),
 			new TopbarScroll(),
 			// new RemoveAltTabDelay(),

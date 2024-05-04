@@ -2,6 +2,7 @@ import GLib from "gi://GLib"
 import St from "gi://St"
 import Clutter from "gi://Clutter"
 import * as Main from "resource:///org/gnome/shell/ui/main.js"
+import Pango from "gi://Pango"
 
 export class PanelDateFormat {
 	constructor() {}
@@ -50,3 +51,4 @@ export class PanelDateFormat {
 		return true
 	}
 }
+

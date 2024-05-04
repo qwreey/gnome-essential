@@ -27,7 +27,7 @@ export class TopbarScroll {
 
 	_onScroll(actor, event) {
 		let source = event.get_source()
-		if (source != actor) {
+		if (source && source != actor) {
 			let inStatusArea = this.panel._rightBox.contains(source)
 			if (inStatusArea) {
 				return Clutter.EVENT_PROPAGATE

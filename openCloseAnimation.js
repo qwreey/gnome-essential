@@ -66,7 +66,12 @@ export class OpenCloseAnimation {
 					scale_y: 1,
 					duration: 360,
 					mode: Clutter.AnimationMode.EASE_OUT_EXPO,
-					onStopped: ()=>actor.set_pivot_point(0, 0)
+					onStopped: ()=>{
+						actor.set_pivot_point(0, 0)
+						actor.opacity = 255
+						actor.scale_x = 1
+						actor.scale_y = 1
+					}
 				})
 				break
 
@@ -84,7 +89,12 @@ export class OpenCloseAnimation {
 					scale_y: 1,
 					duration: 180,//220,
 					mode: Clutter.AnimationMode.EASE_OUT_EXPO,
-					onStopped: ()=>actor.set_pivot_point(0, 0)
+					onStopped: ()=>{
+						actor.set_pivot_point(0, 0)
+						actor.opacity = 255
+						actor.scale_x = 1
+						actor.scale_y = 1
+					}
 				})
 				break
 			case Meta.WindowType.DROPDOWN_MENU:
@@ -105,7 +115,12 @@ export class OpenCloseAnimation {
 					translation_z: 0,
 					duration: 120,//190,
 					mode: Clutter.AnimationMode.EASE_OUT_EXPO,
-					onStopped: ()=>actor.set_pivot_point(0, 0)
+					onStopped: ()=>{
+						actor.set_pivot_point(0, 0)
+						actor.opacity = 255
+						actor.scale_x = 1
+						actor.scale_y = 1
+					}
 				})
 				break
 			case Meta.WindowType.MODAL_DIALOG:
@@ -123,7 +138,12 @@ export class OpenCloseAnimation {
 					scale_y: 1,
 					duration: 280,//360,
 					mode: Clutter.AnimationMode.EASE_OUT_EXPO,
-					onStopped: ()=>actor.set_pivot_point(0, 0)
+					onStopped: ()=>{
+						actor.set_pivot_point(0, 0)
+						actor.opacity = 255
+						actor.scale_x = 1
+						actor.scale_y = 1
+					}
 				})
 				break
 			}

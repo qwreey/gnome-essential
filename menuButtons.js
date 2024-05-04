@@ -1,5 +1,6 @@
 
 import Clutter from "gi://Clutter"
+import St from "gi://St"
 import * as WorkspaceThumbnail from "resource:///org/gnome/shell/ui/workspaceThumbnail.js"
 import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js"
 import * as Main from "resource:///org/gnome/shell/ui/main.js"
@@ -20,7 +21,7 @@ export class MenuButtons {
 	enable() {
 		this.mainMenu = new PanelMenu.Button(0.5, "Main Menu")
 		this.mainMenu.style = this.#buttonStyle
-		this.mainMenu.add_child(new Icon({reactive: true, track_hover: true, icon_name: 'view-app-grid-symbolic', style_class: 'system-status-icon activity-icon'}))
+		this.mainMenu.add_child(new St.Icon({reactive: true, track_hover: true, icon_name: 'view-app-grid-symbolic', style_class: 'system-status-icon activity-icon'}))
 		this.mainMenu.connect('button-press-event', () => {
 			if (Main.overview.visible && ShowAppsButton.checked) {
 				// on apps (leave apps menu)
@@ -39,7 +40,7 @@ export class MenuButtons {
 		// create menu
 		this.wspopupMenu = new PanelMenu.Button(0.5, "Workspace Menu")
 		this.wspopupMenu.style = this.#buttonStyle
-		this.wspopupMenu.add_child(new Icon({reactive: true, track_hover: true, icon_name: 'focus-windows-symbolic', style_class: 'system-status-icon activity-icon'}))
+		this.wspopupMenu.add_child(new St.Icon({reactive: true, track_hover: true, icon_name: 'focus-windows-symbolic', style_class: 'system-status-icon activity-icon'}))
 		this.wspopup = new PopupMenu.PopupMenuSection()
 		this.wspopupMenu.menu.addMenuItem(this.wspopup)
 		// workspace
@@ -69,10 +70,10 @@ export class MenuButtons {
 	old_enable() {
 		// create panel button
 		this.button = new PanelMenu.Button(0.5, "Main Menu")
-		this.box = new BoxLayout()
+		this.box = new St.BoxLayout()
 
 		// create app button
-		this.appButton = new Button()
+		this.appButton = new St.Button()
 		this.appButton.child = new Icon({reactive: true, track_hover: true, icon_name: 'view-app-grid-symbolic', style_class: 'system-status-icon activity-icon'})
 		this.appButton.connect('clicked', () => {
 			if (Main.overview.visible && ShowAppsButton.checked) {
@@ -87,10 +88,10 @@ export class MenuButtons {
 				OverviewShowApps.showApps()
 			}
 		})
-		this.box.add_actor(this.appButton)
+		this.box.add_child(this.appButton)
 
 		// crate activitie button
-		this.overButton = new Button()
+		this.overButton = new St.Button()
 		this.overButton.child = new Icon({reactive: true, track_hover: true, icon_name: 'focus-windows-symbolic', style_class: 'system-status-icon activity-icon'})
 		this.overButton.connect('clicked', () => {
 			if (Main.overview.visible && ShowAppsButton.checked) {
@@ -105,7 +106,7 @@ export class MenuButtons {
 				Main.overview.show()
 			}
 		})
-		this.box.add_actor(this.overButton)
+		this.box.add_child(this.overButton)
 
 		// mount
 		this.button.actor.add_child(this.box)

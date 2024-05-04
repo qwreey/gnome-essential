@@ -14,6 +14,7 @@ import {
     getOffset,
     applyOffset,
     WindowMover,
+	GrabOp,
 } from "./libs/utility.js"
 // TODO: 쉬프트키 누르면 창에 붙도록. 이건 타일링어시스턴트 코드 참조하자
 
@@ -34,7 +35,9 @@ export class Wireframe {
 	#windowMover
 
 	grapBegin(_d ,window, op) {
-		if (!resizingOps.includes(op)) return
+		const gop = new GrabOp(op)
+		console.log(op,gop.isResizing())
+		if (!gop.isResizing()) return
 	
 		// save positions
 		this.#draggedWindow = window
@@ -108,7 +111,8 @@ export class Wireframe {
 		})
 	}
 	calculateSize(op, x, y, width, height, pointerX, pointerY, minWidth, minHeight) {
-		if (op == Meta.GrabOp.RESIZING_N) {
+		const gop = new GrabOp(op)
+		if (gop.isFacing(GrabOp.NORTH)) {
 			const newHeight = Math.max(height+y-pointerY,minHeight)
 			return [
 				x,
@@ -116,14 +120,14 @@ export class Wireframe {
 				width,
 				newHeight,
 			]
-		} else if (op == Meta.GrabOp.RESIZING_S) {
+		} else if (gop.isFacing(GrabOp.SOUTH)) {
 			return [
 				x,
 				y,
 				width,
 				Math.max(pointerY-y,minHeight),
 			]
-		} else if (op == Meta.GrabOp.RESIZING_W) {
+		} else if (gop.isFacing(GrabOp.WEST)) {
 			const newWidth = Math.max(width+x-pointerX,minWidth)
 			return [
 				x-newWidth+width,
@@ -131,14 +135,14 @@ export class Wireframe {
 				newWidth,
 				height,
 			]
-		} else if (op == Meta.GrabOp.RESIZING_E) {
+		} else if (gop.isFacing(GrabOp.EAST)) {
 			return [
 				x,
 				y,
 				Math.max(pointerX-x,minWidth),
 				height,
 			]
-		} else if (op == Meta.GrabOp.RESIZING_NE) {
+		} else if (gop.isFacing(GrabOp.NORTH,GrabOp.EAST)) {
 			const newHeight = Math.max(height+y-pointerY,minHeight)
 			return [
 				x,
@@ -146,14 +150,14 @@ export class Wireframe {
 				Math.max(pointerX-x,minWidth),
 				newHeight,
 			]
-		} else if (op == Meta.GrabOp.RESIZING_SE) {
+		} else if (gop.isFacing(GrabOp.SOUTH,GrabOp.EAST)) {
 			return [
 				x,
 				y,
 				Math.max(pointerX-x,minWidth),
 				Math.max(pointerY-y,minHeight),
 			]
-		} else if (op == Meta.GrabOp.RESIZING_NW) {
+		} else if (gop.isFacing(GrabOp.NORTH,GrabOp.WEST)) {
 			const newWidth = Math.max(width+x-pointerX,minWidth)
 			const newHeight = Math.max(height+y-pointerY,minHeight)
 			return [
@@ -162,7 +166,7 @@ export class Wireframe {
 				newWidth,
 				newHeight,
 			]
-		} else if (op == Meta.GrabOp.RESIZING_SW) {
+		} else if (gop.isFacing(GrabOp.SOUTH,GrabOp.WEST)) {
 			const newWidth = Math.max(width+x-pointerX,minWidth)
 			return [
 				x-newWidth+width,
@@ -173,42 +177,43 @@ export class Wireframe {
 		}
 	}
 	calculateSizingCursorPosition(op, x, y, width, height, pointerX, pointerY) {
-		if (op == Meta.GrabOp.RESIZING_N) {
+		const gop = new GrabOp(op)
+		if (gop.isFacing(GrabOp.NORTH)) {
 			return [
 				pointerX,
 				y
 			]
-		} else if (op == Meta.GrabOp.RESIZING_S) {
+		} else if (gop.isFacing(GrabOp.SOUTH)) {
 			return [
 				pointerX,
 				y+height
 			]
-		} else if (op == Meta.GrabOp.RESIZING_W) {
+		} else if (gop.isFacing(GrabOp.WEST)) {
 			return [
 				x,
 				pointerY
 			]
-		} else if (op == Meta.GrabOp.RESIZING_E) {
+		} else if (gop.isFacing(GrabOp.EAST)) {
 			return [
 				x+width,
 				pointerY
 			]
-		} else if (op == Meta.GrabOp.RESIZING_NE) {
+		} else if (gop.isFacing(GrabOp.NORTH,GrabOp.EAST)) {
 			return [
 				x+width,
 				y
 			]
-		} else if (op == Meta.GrabOp.RESIZING_SE) {
+		} else if (gop.isFacing(GrabOp.SOUTH,GrabOp.EAST)) {
 			return [
 				x+width,
 				y+height
 			]
-		} else if (op == Meta.GrabOp.RESIZING_NW) {
+		} else if (gop.isFacing(GrabOp.NORTH,GrabOp.WEST)) {
 			return [
 				x,
 				y
 			]
-		} else if (op == Meta.GrabOp.RESIZING_SW) {
+		} else if (gop.isFacing(GrabOp.SOUTH,GrabOp.WEST)) {
 			return [
 				x,
 				y+height

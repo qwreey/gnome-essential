@@ -11,7 +11,8 @@ import {
 	WindowInitedHandler,
 	isNormal,
 	safeDestroy,
-	getShadowSize
+	getShadowSize,
+	GrabOp,
 } from "./libs/utility.js"
 
 const [ TOP, BOTTOM, LEFT, RIGHT ] = [0,1,2,3]
@@ -966,7 +967,7 @@ export class EdgeTmpHide {
 		// track grap
 		this.grapOpBegin = global.display.connect('grab-op-begin', (d, win, op) => {
 			if (this.draggedWindow == win) return
-			if (op == Meta.GrabOp.MOVING) {
+			if (new GrabOp(op).isMoving()) {
 				// save positions
 				this.draggedWindow = win
 				let { x:frameX,y:frameY,width:frameWidth,height:frameHeight } = win.get_frame_rect()
@@ -975,7 +976,7 @@ export class EdgeTmpHide {
 			}
 		})
 		this.grapOpEnd = global.display.connect('grab-op-end', (d, win, op) => {
-			if (op == Meta.GrabOp.MOVING) {
+			if (new GrabOp(op).isMoving()) {
 				this.draggedWindow = null
 			}
 		})
@@ -1029,7 +1030,8 @@ export class EdgeTmpHide {
 
 		if (!this.hideOverlayHolder.leftSideDisabled) {
 			this.leftBarrier = new Meta.Barrier({
-				display: global.display,
+				// display: global.display,
+				backend: global.backend,
 				x1: 0,
 				x2: 0,
 				y1: 1 + (panelPosition == TOP ? Main.panel.height : 0),
@@ -1041,7 +1043,8 @@ export class EdgeTmpHide {
 		
 		if (!this.hideOverlayHolder.rightSideDisabled) {
 			this.rightBarrier = new Meta.Barrier({
-				display: global.display,
+				// display: global.display,
+				backend: global.backend,
 				x1: global.stage.width,
 				x2: global.stage.width,
 				y1: 1 + (panelPosition == TOP ? Main.panel.height : 0),
