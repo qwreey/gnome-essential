@@ -1,12 +1,20 @@
 import Meta from "gi://Meta"
 import Clutter from "gi://Clutter"
 import * as Main from "resource:///org/gnome/shell/ui/main.js"
-import { PointerUtil } from "../libs/utility.js"
 
 // todo: rewrite and reanimate with mouse position
 
+import {
+	cloneWindow,
+	Maid,
+	PointerUtil,
+	ShouldAnimateActorHook,
+} from "../libs/utility.js"
+
 export class OpenCloseAnimation {
 	constructor() { }
+
+	#maid
 
 	get_bottom(actor) {
 		const window = actor.meta_window
@@ -16,13 +24,7 @@ export class OpenCloseAnimation {
 	}
 
 	_captureWindow(window_actor) {
-		return new Clutter.Actor({
-			height: window_actor.height,
-			width: window_actor.width,
-			x: window_actor.x,
-			y: window_actor.y,
-			content: window_actor.paint_to_content(null)
-		})
+		return cloneWindow(window_actor, window_actor.height, window_actor.width, window_actor.x, window_actor.y)
 	}
 
 	async open(actor) {
@@ -245,40 +247,29 @@ export class OpenCloseAnimation {
 	}
 
 	enable() {
-		this.orig_shouldAnimateActor = Main.wm._shouldAnimateActor
-		this.shouldAnimateActor = Main.wm._shouldAnimateActor.bind(Main.wm)
-		Main.wm._shouldAnimateActor = (actor, types, stack) => {
-			stack = stack || new Error().stack
-			if (stack && (stack.indexOf("_mapWindow") !== -1 || stack.indexOf("_destroyWindow") !== -1)) {
-				return false
-			}
-			return this.shouldAnimateActor(actor, types, stack)
-		}
+		ShouldAnimateActorHook.add("_mapWindow", () => false)
+		ShouldAnimateActorHook.add("_destroyWindow", () => false)
+
+		const maid = this.#maid = new Maid()
+		maid.functionJob(() => ShouldAnimateActorHook.remove("_mapWindow"))
+		maid.functionJob(() => ShouldAnimateActorHook.remove("_destroyWindow"))
+		maid.connectJob(global.window_manager, "map", (e, actor) => {
+			this.open(actor).catch(log)
+		})
+		maid.connectJob(global.window_manager, "destroy", (e, actor) => {
+			this.close(actor).catch(log)
+		})
 
 		this.orig_completed_destroy = Main.wm._shellwm.completed_destroy
 		this.completed_destroy = Main.wm._shellwm.completed_destroy.bind(Main.wm._shellwm)
 		Main.wm._shellwm.completed_destroy = function (actor) {
 			return
 		}
-
-		this.wmMap = global.window_manager.connect("map", (e, actor) => {
-			this.open(actor).catch(log)
-		})
-
-		this.wmDestroy = global.window_manager.connect("destroy", (e, actor) => {
-			this.close(actor).catch(log)
-		})
-
 	}
 
 	disable() {
-		Main.wm._shouldAnimateActor = this.orig_shouldAnimateActor
+		this.#maid.destroy()
 		Main.wm._shellwm.completed_destroy = this.orig_completed_destroy
-		this.orig_shouldAnimateActor = this.orig_completed_destroy = null
-		this.shouldAnimateActor = this.completed_destroy = null
-
-		global.window_manager.disconnect(this.wmMap)
-		global.window_manager.disconnect(this.wmDestroy)
-		this.wmMap = this.wmDestroy = null
+		this.#maid = this.orig_completed_destroy = this.completed_destroy = null
 	}
 }

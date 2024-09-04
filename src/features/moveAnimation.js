@@ -1,38 +1,27 @@
 import Meta from "gi://Meta"
 import Clutter from "gi://Clutter"
-import * as Main from "resource:///org/gnome/shell/ui/main.js"
+// import * as Main from "resource:///org/gnome/shell/ui/main.js"
 import {
 	getShadowSize,
 	getResizeAnimationSize,
 	getSpeed,
 	sleep,
 	cloneWindow,
+	ShouldAnimateActorHook,
+	delayFrames,
+	Maid
 } from "../libs/utility.js"
 
-const allowedOps = [Meta.SizeChange.UNMAXIMIZE, Meta.SizeChange.MAXIMIZE]
+const maximizeOps = [Meta.SizeChange.UNMAXIMIZE, Meta.SizeChange.MAXIMIZE]
+const fullscreenOps = [Meta.SizeChange.FULLSCREEN, Meta.SizeChange.UNFULLSCREEN]
+const allowedOps = [...maximizeOps, ...fullscreenOps]
+
+// FIXME: try super -> <- ... something unexpected
 
 export class MoveAnimation {
 	constructor() { }
 
-	// give time to redraw it selfs to application
-	// If canceled, return true
-	// RENDER_DELAY = 4
-	RENDER_DELAY = 6
-	_delayFrames(actor) {
-		return new Promise(resolve => {
-			const timeline = actor.timeline = new Clutter.Timeline({ actor: actor, duration: 1000 })
-			let count = 0
-			actor.resolve = resolve
-			actor.newframe = timeline.connect("new-frame", () => {
-				if (++count < this.RENDER_DELAY) return
-				timeline.disconnect(actor.newframe)
-				timeline.run_dispose()
-				actor.resolve = actor.newframe = actor.timeline = null
-				resolve()
-			})
-			timeline.start()
-		})
-	}
+	#maid
 
 	before(actor, op, oldFrameRect, oldBufferRect) {
 		if (!actor.mapped) return
@@ -59,12 +48,38 @@ export class MoveAnimation {
 		this.op = op
 	}
 
-	async animate(actor) {
-		actor.remove_all_transitions()
+	// not works for now, how?
+	async fullscreenAnimation(actor) {
+		const shadow = getShadowSize(actor.meta_window)
 
+		const size = this.op === Meta.SizeChange.FULLSCREEN ? 80 : -100
+		actor.scale_x = (shadow.frameWidth - size) / shadow.frameWidth
+		actor.scale_y = (shadow.frameHeight - size) / shadow.frameHeight
+		actor.translation_x = actor.translation_y = size / 2
+
+		actor.ease({
+			scale_y: 1,
+			translation_y: 0,
+			mode: Clutter.AnimationMode.EASE_OUT_QUINT,
+			duration: 260,
+			onStopped: () => {
+				if (actor.is_destroyed()) return
+				actor.scale_x = 1
+				actor.scale_y = 1
+				actor.translation_x = 0
+				actor.translation_y = 0
+			},
+		})
+		this.capture.destroy()
+	}
+
+	async maximizeAnimation(actor) {
 		const shadow = getShadowSize(actor.meta_window)
 		const animationSize = getResizeAnimationSize(this.sourceShadow, shadow.frameX, shadow.frameY, shadow.frameWidth, shadow.frameHeight)
 		const speed = getSpeed(this.sourceShadow, shadow.frameWidth, shadow.frameHeight, 0.9, 0.9, 1.3)
+
+		// idk what happen (maybe less buggy)
+		await delayFrames(actor, this, 4)
 
 		actor.scale_x = animationSize.actorInitScaleX
 		actor.scale_y = animationSize.actorInitScaleY
@@ -120,39 +135,33 @@ export class MoveAnimation {
 	}
 
 	enable() {
-		this.orig_shouldAnimateActor = Main.wm._shouldAnimateActor
-		this.shouldAnimateActor = Main.wm._shouldAnimateActor.bind(Main.wm)
-		Main.wm._shouldAnimateActor = (actor, types, stack) => {
-			stack = stack || new Error().stack
-			if (stack && (stack.indexOf("_sizeChangeWindow") !== -1)) {
-				return false
-			}
-			return this.shouldAnimateActor(actor, types, stack)
-		}
+		ShouldAnimateActorHook.add("_sizeChangeWindow", () => false)
 
-		this.size_change = global.window_manager.connect("size-change", (shellwm, actor, op, oldFrameRect, oldBufferRect) => {
+		const maid = this.#maid = new Maid()
+		maid.functionJob(() => ShouldAnimateActorHook.remove("_sizeChangeWindow"))
+		maid.connectJob(global.window_manager, "size-change", (shellwm, actor, op, oldFrameRect, oldBufferRect) => {
 			this.before(actor, op, oldFrameRect, oldBufferRect)
 		})
-		this.size_changed = global.window_manager.connect("size-changed", (shellwm, actor) => {
+		maid.connectJob(global.window_manager, "size-changed", (shellwm, actor) => {
 			const resizedActor = this.resizedActor
 			this.resizedActor = null
 			if (resizedActor != actor) return
 			if (actor._noAnimation) return
 			if (actor.is_destroyed()) return // TOD: do not use this. it will error
 
-			this.animate(actor).catch(log)
+			actor.remove_all_transitions()
+			if (maximizeOps.includes(this.op) !== -1) {
+				this.maximizeAnimation(actor).catch(log)
+			} else if (fullscreenOps.includes(this.op) !== -1) {
+				this.fullscreenAnimation(actor).catch(log)
+			}
 		})
 	}
 
 	disable() {
-		this.capture = null
+		ShouldAnimateActorHook.remove("_sizeChangeWindow")
 
-		global.window_manager.disconnect(this.size_change)
-		global.window_manager.disconnect(this.size_changed)
-		this.size_changed = this.size_change = null
-
-		Main.wm._shouldAnimateActor = this.orig_shouldAnimateActor
-		this.orig_shouldAnimateActor = null
-		this.sizeChangedWindow = null
+		this.#maid.destroy()
+		this.resizedActor = this.capture = this.#maid = null
 	}
 }

@@ -529,13 +529,13 @@ export function getShadowSize(window, frame, buffer) {
 	}
 }
 
+// sleep
 export function sleep(ms) {
 	return new Promise(r => GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms || 1, () => {
 		r()
 		return GLib.SOURCE_REMOVE
 	}))
 }
-
 export function sleep_lazy(ms) {
 	return new Promise(r => GLib.timeout_add(GLib.PRIORITY_LOW, ms || 1, () => {
 		r()
@@ -543,6 +543,8 @@ export function sleep_lazy(ms) {
 	}))
 }
 
+// get window min size with hacky method, after this op,
+// size and position of window will strange. you should move and resize
 export async function getMinSize(window) {
 	let { width: old_width, height: old_height } = window.get_frame_rect()
 	old_height += 100
@@ -570,6 +572,7 @@ export async function getMinSize(window) {
 	return [minWidth, minHeight]
 }
 
+// Create static window clone
 export function cloneWindow(actor, height, width, x, y) {
 	return new Clutter.Actor({
 		height, width, x, y,
@@ -577,6 +580,7 @@ export function cloneWindow(actor, height, width, x, y) {
 	})
 }
 
+// Get window animation speed, with changed area relative
 export function getSpeed(shadow, toWidth, toHeight, exp, base, top) {
 	// Calculate speed by vec length
 	const length = Math.sqrt(Math.pow(Math.abs(shadow.frameWidth - toWidth), 2) + Math.pow(Math.abs(shadow.frameHeight - toHeight), 2))
@@ -863,6 +867,7 @@ export class StaticBlur {
 }
 
 // Window unresizer
+// FIXME:
 export class Unresizabler {
 	resizeOps = [
 		Meta.GrabOp.RESIZING_E,
@@ -1009,9 +1014,29 @@ export function isNormal(window) {
 	return window.window_type === Meta.WindowType.NORMAL
 }
 
+// IDK what this mean
 export const RENDER_DELAY = 4 // ignore initial call / first frame call (on resized) / after call (window redraw) + time to render window
 
-export var WindowMover = class WindowMover {
+// give time to redraw it selfs to application
+// If canceled, return true
+export function delayFrames(actor, animation, delay) {
+	delay ??= RENDER_DELAY
+	return new Promise(resolve => {
+		const timeline = animation.timeline = new Clutter.Timeline({ actor: actor, duration: 1000 })
+		let count = 0
+		animation.resolve = resolve
+		animation.newframe = timeline.connect("new-frame", () => {
+			if (++count < delay) return
+			timeline.disconnect(animation.newframe)
+			timeline.run_dispose()
+			animation.resolve = animation.newframe = animation.timeline = null
+			resolve()
+		})
+		timeline.start()
+	})
+}
+
+export const WindowMover = class WindowMover {
 	constructor() {
 		this._windowAnimations = []
 	}
@@ -1024,31 +1049,7 @@ export var WindowMover = class WindowMover {
 
 	// capture window content and create clone clutter
 	_captureWindow(window_actor, rect) {
-		return new Clutter.Actor({
-			height: rect.height,
-			width: rect.width,
-			x: rect.x,
-			y: rect.y,
-			content: window_actor.paint_to_content(null)
-		})
-	}
-
-	// give time to redraw it selfs to application
-	// If canceled, return true
-	_delayFrames(actor, animation) {
-		return new Promise(resolve => {
-			const timeline = animation.timeline = new Clutter.Timeline({ actor: actor, duration: 1000 })
-			let count = 0
-			animation.resolve = resolve
-			animation.newframe = timeline.connect("new-frame", () => {
-				if (++count < RENDER_DELAY) return
-				timeline.disconnect(animation.newframe)
-				timeline.run_dispose()
-				animation.resolve = animation.newframe = animation.timeline = null
-				resolve()
-			})
-			timeline.start()
-		})
+		return cloneWindow(window_actor, rect.height, rect.width, rect.x, rect.y)
 	}
 
 	// destroy last animation, Also cancel delayFraems
@@ -1146,7 +1147,7 @@ export var WindowMover = class WindowMover {
 		window.move_resize_frame(true, x, y, width, height)
 		window.move_frame(true, x, y) // some buggy window require this... (eg: gnome terminal)
 
-		const resultDelay = await this._delayFrames(actor, thisAnimation) // wait once for window size updating
+		const resultDelay = await delayFrames(actor, thisAnimation) // wait once for window size updating
 		if (lastAnimation) this._destroyAnimation(lastAnimation) // remove old transitions (actor easing)
 		if (resultDelay) return // If canceled, just return
 		actor.opacity = 255
@@ -1430,9 +1431,47 @@ export const Pannel = new class Pannel {
 	}
 }
 
+export const ShouldAnimateActorHook = new class ShouldAnimateActorHook {
+	constructor() { }
+
+	#orig_shouldAnimateActor
+	#shouldAnimateActor
+	#evt
+
+	add(key, callback) {
+		this.#evt[key] = callback
+	}
+	remove(key) {
+		delete this.#evt[key]
+	}
+
+	enable() {
+		this.#evt = []
+		this.#orig_shouldAnimateActor = Main.wm._shouldAnimateActor
+		this.#shouldAnimateActor = Main.wm._shouldAnimateActor.bind(Main.wm)
+		Main.wm._shouldAnimateActor = (actor, types, stack) => {
+			stack = stack || new Error().stack
+			if (stack) {
+				for (let key in this.#evt) {
+					if (stack.indexOf(key) !== -1) {
+						return this.#evt[key]()
+					}
+				}
+			}
+			return this.#shouldAnimateActor(actor, types, stack)
+		}
+	}
+
+	disable() {
+		Main.wm._shouldAnimateActor = this.#orig_shouldAnimateActor
+		this.#evt = this.#shouldAnimateActor = this.#orig_shouldAnimateActor = null
+	}
+}
+
 // Items which should be enabled when plugin running
 export const ExtensionHandlers = [
 	FocusArray,
 	PointerUtil,
 	Pannel,
+	ShouldAnimateActorHook,
 ]

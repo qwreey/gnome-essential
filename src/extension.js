@@ -53,6 +53,7 @@ import { ExtensionHandlers } from "./libs/utility.js"
 // import { CursorFix } from "./cursorFix.js"
 // import { Blackout } from "./blackout.js"
 import { Wireframe } from "./features/wireframe.js"
+import { TilePreview } from "./features/tilePreview.js"
 // import { ReorderPannel } from "./reorderPannel.js"
 
 const verbose = false
@@ -114,6 +115,7 @@ export default class MainExtension extends Extension {
 			// new CursorFix(),
 			// new Blackout(),
 			new Wireframe(),
+			new TilePreview(),
 		]
 		if (verbose) {
 			this.last = +Date.now()

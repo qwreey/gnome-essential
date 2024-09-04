@@ -290,14 +290,14 @@ export class Wireframe {
 	}
 
 	enable() {
-		this.#maid = new Maid()
-		this.#maid.safeDestroyJob(this.#windowMover = new WindowMover(), Maid.Priority.Low)
-		this.#maid.safeDestroyJob(this.#pointerMovePreventer = new PointerMovePreventer(), Maid.Priority.Low)
-		this.#maid.safeDestroyJob(this.#fakePointer = new FakePointer(), Maid.Priority.Low)
-		this.#maid.connectJob(global.display, 'grab-op-begin', this.grapBegin.bind(this))
-		this.#maid.connectJob(global.display, 'grab-op-end', this.grapEnd.bind(this))
-		this.#maid.connectJob(this.#pointerMovePreventer, 'pointer-move', this.pointerMove.bind(this))
-		this.#maid.safeDestroyJob(this.#draggingWidget = new St.Widget({
+		const maid = this.#maid = new Maid()
+		maid.safeDestroyJob(this.#windowMover = new WindowMover(), Maid.Priority.Low)
+		maid.safeDestroyJob(this.#pointerMovePreventer = new PointerMovePreventer(), Maid.Priority.Low)
+		maid.safeDestroyJob(this.#fakePointer = new FakePointer(), Maid.Priority.Low)
+		maid.connectJob(global.display, 'grab-op-begin', this.grapBegin.bind(this))
+		maid.connectJob(global.display, 'grab-op-end', this.grapEnd.bind(this))
+		maid.connectJob(this.#pointerMovePreventer, 'pointer-move', this.pointerMove.bind(this))
+		maid.safeDestroyJob(this.#draggingWidget = new St.Widget({
 			style: "background: rgba(185, 115, 255, 0.16); border-radius: 12px; border: solid rgba(164, 79, 255, 0.78) 1px;",
 		}))
 	}

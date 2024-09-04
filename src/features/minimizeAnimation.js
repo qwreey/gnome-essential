@@ -1,9 +1,13 @@
 import Clutter from "gi://Clutter"
 import * as Main from "resource:///org/gnome/shell/ui/main.js"
 
-// const RENDER_DELAY = 4
-const RENDER_DELAY = 8
+import {
+	ShouldAnimateActorHook,
+	delayFrames,
+	Maid
+} from "../libs/utility.js"
 
+// TODO: rewrite this
 class AnimationHandler {
 	captureWindow(window_actor, rect) {
 		return new Clutter.Actor({
@@ -15,26 +19,10 @@ class AnimationHandler {
 		})
 	}
 
-	delayFrames(actor) {
-		return new Promise(resolve => {
-			const timeline = this.timeline = new Clutter.Timeline({ actor: actor, duration: 1000 })
-			let count = 0
-			this.resolve = resolve
-			this.newframe = timeline.connect("new-frame", () => {
-				if (++count < RENDER_DELAY) return
-				timeline.disconnect(this.newframe)
-				timeline.run_dispose()
-				this.resolve = this.newframe = this.timeline = null
-				resolve()
-			})
-			timeline.start()
-		})
-	}
-
 	constructor(actor, icon, isOpening, onCompleted) {
 		actor.show()
 		if (isOpening) actor.visible = false
-		if (isOpening) this.delayFrames(actor).then(this.init.bind(this, actor, icon, isOpening, onCompleted))
+		if (isOpening) delayFrames(actor, this, 8).then(this.init.bind(this, actor, icon, isOpening, onCompleted)).catch(log)
 		else this.init(actor, icon, isOpening, onCompleted)
 	}
 
@@ -112,16 +100,41 @@ class AnimationHandler {
 export class MinimizeAnimation {
 	constructor() { }
 
+	#maid
+
 	enable() {
-		this.orig_shouldAnimateActor = Main.wm._shouldAnimateActor
-		this.shouldAnimateActor = Main.wm._shouldAnimateActor.bind(Main.wm)
-		Main.wm._shouldAnimateActor = (actor, types, stack) => {
-			stack = stack || new Error().stack
-			if (stack && (stack.indexOf("_minimizeWindow") !== -1 || stack.indexOf("_unminimizeWindow") !== -1)) {
-				return false
+		ShouldAnimateActorHook.add("_minimizeWindow", () => false)
+		ShouldAnimateActorHook.add("_unminimizeWindow", () => false)
+
+		const maid = this.#maid = new Maid()
+		maid.functionJob(() => ShouldAnimateActorHook.remove("_minimizeWindow"))
+		maid.functionJob(() => ShouldAnimateActorHook.remove("_unminimizeWindow"))
+		maid.connectJob(global.window_manager, "minimize", (e, actor) => {
+			if (actor._noAnimation) {
+				this.completed_minimize(actor)
+				return
 			}
-			return this.shouldAnimateActor(actor, types, stack)
-		}
+			if (Main.overview.visible) {
+				this.completed_minimize(actor)
+				return
+			}
+
+			this.destroyActorEffect(actor)
+			this.createMinimizeActorEffect(actor, this.getIcon(actor))
+		})
+		maid.connectJob(global.window_manager, "unminimize", (e, actor) => {
+			if (actor._noAnimation) {
+				this.completed_minimize(actor)
+				return
+			}
+			if (Main.overview.visible) {
+				this.completed_unminimize(actor)
+				return
+			}
+
+			this.destroyActorEffect(actor)
+			this.createUnminimizeActorEffect(actor, this.getIcon(actor))
+		})
 
 		this.orig_completed_minimize = Main.wm._shellwm.completed_minimize
 		this.completed_minimize = Main.wm._shellwm.completed_minimize.bind(Main.wm._shellwm)
@@ -134,36 +147,6 @@ export class MinimizeAnimation {
 		Main.wm._shellwm.completed_unminimize = function (actor) {
 			return
 		}
-
-		this.minimizeId = global.window_manager.connect("minimize", (e, actor) => {
-			if (actor._noAnimation) {
-				this.completed_minimize(actor)
-				return
-			}
-
-			if (Main.overview.visible) {
-				this.completed_minimize(actor)
-				return
-			}
-
-			this.destroyActorEffect(actor)
-			this.createMinimizeActorEffect(actor, this.getIcon(actor))
-		})
-
-		this.unminimizeId = global.window_manager.connect("unminimize", (e, actor) => {
-			if (actor._noAnimation) {
-				this.completed_minimize(actor)
-				return
-			}
-
-			if (Main.overview.visible) {
-				this.completed_unminimize(actor)
-				return
-			}
-
-			this.destroyActorEffect(actor)
-			this.createUnminimizeActorEffect(actor, this.getIcon(actor))
-		})
 	}
 
 	disable() {
