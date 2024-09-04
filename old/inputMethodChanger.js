@@ -7,14 +7,14 @@ import { getInputSourceManager } from "resource:///org/gnome/shell/ui/status/key
 export class InputMethodChanger {
     #settings
     #inputSourceManager
-    constructor() {}
+    constructor() { }
 
     apply(inputSource) {
         if (!inputSource) return
         if (this.#inputSourceManager.currentSource == inputSource) return
         // this.#inputSourceManager.activateInputSource(inputSource)
         inputSource.activate()
-        GLib.timeout_add(GLib.PRIORITY_DEFAULT,2,()=>{
+        GLib.timeout_add(GLib.PRIORITY_DEFAULT, 2, () => {
             this.apply(inputSource)
             return GLib.SOURCE_REMOVE
         })
@@ -23,12 +23,12 @@ export class InputMethodChanger {
     change() {
         const currentSource = this.#inputSourceManager.currentSource
         const sources = this.#inputSourceManager.inputSources
-        let lastIndex,currentIndex=0,source
-        for (let index=0; source=sources[index]; index++) {
+        let lastIndex, currentIndex = 0, source
+        for (let index = 0; source = sources[index]; index++) {
             if (currentSource == source) currentIndex = index
             lastIndex = index
         }
-        const nextIndex = (currentIndex+1)%(lastIndex+1)
+        const nextIndex = (currentIndex + 1) % (lastIndex + 1)
         const nextSource = sources[nextIndex]
         this.apply(nextSource)
     }

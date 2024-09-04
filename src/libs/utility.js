@@ -30,33 +30,33 @@ export class Maid {
 		SafeDestroy: 4,
 	}
 	static Priority = {
-		High:    2000,
+		High: 2000,
 		Default: 0,
-		Low:     -2000,
+		Low: -2000,
 	}
 
 	constructor() {
 		this.#records = []
 	}
 
-	connectJob(signalObject,signalName,handleFunc, priority=0) {
+	connectJob(signalObject, signalName, handleFunc, priority = 0) {
 		if (!this.#records) Error("Destroyed connection maid. connect() is not allowed")
-		this.#records.push([this.#TaskType.Connect, priority, signalObject, signalObject.connect(signalName,handleFunc)])
+		this.#records.push([this.#TaskType.Connect, priority, signalObject, signalObject.connect(signalName, handleFunc)])
 	}
 
-	functionJob(func, priority=0) {
+	functionJob(func, priority = 0) {
 		this.#records.push([this.#TaskType.Function, priority, func])
 	}
 
-	disposeJob(object, priority=0) {
+	disposeJob(object, priority = 0) {
 		this.#records.push([this.#TaskType.Dispose, priority, object])
 	}
 
-	destroyJob(object, priority=0) {
+	destroyJob(object, priority = 0) {
 		this.#records.push([this.#TaskType.Destroy, priority, object])
 	}
 
-	safeDestroyJob(object, priority=0) {
+	safeDestroyJob(object, priority = 0) {
 		this.#records.push([this.#TaskType.SafeDestroy, priority, object])
 	}
 
@@ -68,9 +68,9 @@ export class Maid {
 
 	clean() {
 		if (!this.#records) Error("Destroyed connection maid. clean() is not allowed")
-		this.#records.sort((a,b)=>a[1]<b[1]) // Priority sorting
+		this.#records.sort((a, b) => a[1] < b[1]) // Priority sorting
 		for (const record of this.#records) {
-			const taskType = record.splice(0,2)[0]
+			const taskType = record.splice(0, 2)[0]
 			switch (taskType) {
 				case this.#TaskType.Connect:
 					record[0].disconnect(record[1])
@@ -136,10 +136,10 @@ export class EventEmitter {
 			delete this.#connections[eventName]
 		}
 	}
-	emit(eventName,...args) {
+	emit(eventName, ...args) {
 		if (this.#destroyed) throw Error("Destroyed event emitter. emit() is not allowed")
 		const connections = this.#connections[eventName]
-		if (!connections) throw Error("Event name '"+eventName+"' is not exist.")
+		if (!connections) throw Error("Event name '" + eventName + "' is not exist.")
 		for (const connection of connections) {
 			try {
 				connection[0](...args)
@@ -151,47 +151,47 @@ export class EventEmitter {
 	}
 
 	// Connection
-	connect(eventName,func) {
+	connect(eventName, func) {
 		if (this.#destroyed) throw Error("Destroyed event emitter. connect() is not allowed")
 		const connections = this.#connections[eventName]
-		if (!connections) throw Error("Event name '"+eventName+"' is not exist.")
+		if (!connections) throw Error("Event name '" + eventName + "' is not exist.")
 		const id = this.id++
-		connections.push([func,id])
-		return [eventName,id]
+		connections.push([func, id])
+		return [eventName, id]
 	}
 	disconnect(connection) {
 		if (this.#destroyed) throw Error("Destroyed event emitter. disconnect() is not allowed")
-		const [ eventName, id ] = connection
+		const [eventName, id] = connection
 		const connections = this.#connections[eventName]
 		if (!connections) return
-		const index = connections.findIndex(connection=>connection[1]==id)
+		const index = connections.findIndex(connection => connection[1] == id)
 		if (index == -1) return
-		connections.splice(index,1)
+		connections.splice(index, 1)
 	}
 
 	// Object based connection
 	connectObject(...args) {
 		if (this.#destroyed) throw Error("Destroyed event emitter. connectObject() is not allowed")
 		const object = args.pop()
-		for (let index = 0; index < args.length/2; index++) { // check event names
-			const eventName = args[index*2]
-			if (!this.#connections[eventName]) throw Error("Event name '"+eventName+"' is not exist.")
+		for (let index = 0; index < args.length / 2; index++) { // check event names
+			const eventName = args[index * 2]
+			if (!this.#connections[eventName]) throw Error("Event name '" + eventName + "' is not exist.")
 		}
-		let connection = this.#objects.find(connection=>connection[0] == object) // get old object connection
+		let connection = this.#objects.find(connection => connection[0] == object) // get old object connection
 		if (!connection) { // if no object connection found, make one
 			connection = [object]
 			this.#objects.push(connection) // push to object connection list
 		}
-		for (let index = 0; index < args.length/2; index++) {
-			connection.push(this.connect(args[index*2],args[index*2+1])) // make connections
+		for (let index = 0; index < args.length / 2; index++) {
+			connection.push(this.connect(args[index * 2], args[index * 2 + 1])) // make connections
 		}
 	}
 	connect_object(...args) { return this.connectObject(...args) }
 	disconnectObject(object) {
 		if (this.#destroyed) throw Error("Destroyed event emitter. disconnectObject() is not allowed")
-		const index = this.#objects.findIndex(connection=>connection[0] == object)
+		const index = this.#objects.findIndex(connection => connection[0] == object)
 		if (index == -1) return
-		const connection = this.#objects.splice(index,1)[0]
+		const connection = this.#objects.splice(index, 1)[0]
 		connection.shift()
 		for (const subConnection of connection) {
 			this.disconnect(subConnection)
@@ -213,7 +213,8 @@ export class EventEmitter {
 // Mouse move preventer
 export class PointerMovePreventer extends EventEmitter {
 	#pressureBarrier
-	#barrierOffset = 100
+	#barrierOffset = 10000
+	#notifyPositionConnection
 	#events = [
 		"pointer-move",
 		"locked",
@@ -232,10 +233,10 @@ export class PointerMovePreventer extends EventEmitter {
 			Layout.HOT_CORNER_PRESSURE_TIMEOUT,
 			0 // Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW
 		)
-		this.#pressureBarrier._onBarrierHit = (_barrier, event)=>{
+		this.#pressureBarrier._onBarrierHit = (_barrier, event) => {
 			super.emit("pointer-move",
-				Math.floor(this.x = Math.max(0,Math.min(global.stage.width, this.x + event.dx*this.sensitivity))),
-				Math.floor(this.y = Math.max(0,Math.min(global.stage.height,this.y + event.dy*this.sensitivity))),
+				Math.floor(this.x = Math.max(0, Math.min(global.stage.width, this.x + event.dx * this.sensitivity))),
+				Math.floor(this.y = Math.max(0, Math.min(global.stage.height, this.y + event.dy * this.sensitivity))),
 				event
 			)
 		}
@@ -247,48 +248,55 @@ export class PointerMovePreventer extends EventEmitter {
 		this.#pressureBarrier.destroy()
 		this.#pressureBarrier = null
 	}
-	lockMoveAt(x,y) {
+	lockMoveAt(x, y) {
 		this.x = x
 		this.y = y
-		this.#createBarrier(x,y)
-		PointerUtil.position = [x, y]
-		super.emit("locked",x,y)
+		this.#createBarrier(x, y)
+		let ptrpos = PointerUtil.position = [x, y]
+		this.#notifyPositionConnection = PointerUtil.connect("notify::position", (newX, newY) => {
+			if (x !== newX || y !== newY) {
+				PointerUtil.position = ptrpos
+			}
+		})
+		super.emit("locked", x, y)
 	}
 	lockMove() {
-		const [ x, y ] = PointerUtil.getRawPosition()
+		const [x, y] = PointerUtil.getRawPosition()
 		this.lockMoveAt(x, y)
-		return [ x, y ]
+		return [x, y]
 	}
 	unlockMove() {
 		this.#destroyBarrier()
 		super.emit("unlocked")
+		PointerUtil.disconnect(this.#notifyPositionConnection)
+		this.#notifyPositionConnection = null
 	}
 
 	// Barrier handler
-	#createBarrier(cursorX,cursorY) {
+	#createBarrier(cursorX, cursorY) {
 		this.#pressureBarrier.addBarrier(this.leftBarrier = new Meta.Barrier({
 			// display: global.display,
 			backend: global.backend,
 			x1: cursorX,
 			x2: cursorX,
-			y1: Math.max(0,cursorY-this.#barrierOffset),
-			y2: Math.min(global.stage.height,cursorY+this.#barrierOffset),
+			y1: Math.max(0, cursorY - this.#barrierOffset),
+			y2: Math.min(global.stage.height, cursorY + this.#barrierOffset),
 			directions: Meta.BarrierDirection.POSITIVE_X,
 		}))
 		this.#pressureBarrier.addBarrier(this.rightBarrier = new Meta.Barrier({
 			// display: global.display,
 			backend: global.backend,
-			x1: cursorX+1,
-			x2: cursorX+1,
-			y1: Math.max(0,cursorY-this.#barrierOffset),
-			y2: Math.min(global.stage.height,cursorY+this.#barrierOffset),
+			x1: cursorX, // + 1,
+			x2: cursorX, // + 1,
+			y1: Math.max(0, cursorY - this.#barrierOffset),
+			y2: Math.min(global.stage.height, cursorY + this.#barrierOffset),
 			directions: Meta.BarrierDirection.NEGATIVE_X,
 		}))
 		this.#pressureBarrier.addBarrier(this.topBarrier = new Meta.Barrier({
 			// display: global.display,
 			backend: global.backend,
-			x1: Math.max(0,cursorX-this.#barrierOffset),
-			x2: Math.min(global.stage.width,cursorX+this.#barrierOffset),
+			x1: Math.max(0, cursorX - this.#barrierOffset),
+			x2: Math.min(global.stage.width, cursorX + this.#barrierOffset),
 			y1: cursorY,
 			y2: cursorY,
 			directions: Meta.BarrierDirection.POSITIVE_Y,
@@ -296,10 +304,10 @@ export class PointerMovePreventer extends EventEmitter {
 		this.#pressureBarrier.addBarrier(this.bottomBarrier = new Meta.Barrier({
 			// display: global.display,
 			backend: global.backend,
-			x1: Math.max(0,cursorX-this.#barrierOffset),
-			x2: Math.min(global.stage.width,cursorX+this.#barrierOffset),
-			y1: cursorY+1,
-			y2: cursorY+1,
+			x1: Math.max(0, cursorX - this.#barrierOffset),
+			x2: Math.min(global.stage.width, cursorX + this.#barrierOffset),
+			y1: cursorY, // + 1,
+			y2: cursorY, // + 1,
 			directions: Meta.BarrierDirection.NEGATIVE_Y,
 		}))
 		super.emit("barrier-created")
@@ -352,7 +360,7 @@ export class FakePointer {
 			return
 		}
 		this.#cursorSprite.content.texture = sprite
-		
+
 		this.#cursorSprite.translationX = -xHot
 		this.#cursorSprite.translationY = -yHot
 
@@ -374,7 +382,7 @@ export class FakePointer {
 
 		Main.layoutManager.addTopChrome(this.#cursorActor)
 	}
-	
+
 	hide() {
 		if (!this.#visible) return
 		this.#visible = false
@@ -421,12 +429,12 @@ export const PointerUtil = new class PointerUtil extends EventEmitter {
 		// Cursor position tracker
 		this.#cursorWatcher = PointerWatcher.getPointerWatcher()
 		this.framerate = 60
-		this.interval = 1000/this.framerate
+		this.interval = 1000 / this.framerate
 		this.#cursorWatch = this.#cursorWatcher.addWatch(this.interval, this.#updatePosition.bind(this))
 
 		// Cursor shape tracker
 		this.#cursorTracker = Meta.CursorTracker.get_for_display(global.display)
-		this.#maid.connectJob(this.#cursorTracker, 'cursor-changed',     this.#spriteChanged.bind(this))
+		this.#maid.connectJob(this.#cursorTracker, 'cursor-changed', this.#spriteChanged.bind(this))
 		this.#maid.connectJob(this.#cursorTracker, 'visibility-changed', this.#updateVisible.bind(this))
 	}
 	disable() {
@@ -439,7 +447,7 @@ export const PointerUtil = new class PointerUtil extends EventEmitter {
 		this.#cursorTracker = null
 	}
 
-	
+
 	// sprite & hot (texture)
 	get sprite() {
 		return this.#spriteCache ?? this.getRawSprite()
@@ -474,8 +482,8 @@ export const PointerUtil = new class PointerUtil extends EventEmitter {
 	}
 
 	// Position
-	set position([x,y]) {
-		this.#defaltSeat.warp_pointer(x,y)
+	set position([x, y]) {
+		this.#defaltSeat.warp_pointer(x, y)
 	}
 	get position() {
 		return this.#cursorCache ?? this.getRawPosition()
@@ -484,25 +492,29 @@ export const PointerUtil = new class PointerUtil extends EventEmitter {
 		return this.#cursorCache = global.get_pointer()
 	}
 	#updatePosition(x, y, mask) {
+		if (this.#cursorCache &&
+			this.#cursorCache[0] === x &&
+			this.#cursorCache[1] === y &&
+			this.#cursorCache[2] === mask) return
 		this.#cursorCache = [x, y, mask]
 		super.emit("notify::position", x, y, mask)
 	}
 }
 
 // Window shadow size calc
-export function getShadowSize(window) {
-	const { width: frameWidth, height: frameHeight, x: frameX, y: frameY } = window.get_frame_rect()
-	const { width: bufferWidth, height: bufferHeight, x: bufferX, y: bufferY } = window.get_buffer_rect()
+export function getShadowSize(window, frame, buffer) {
+	const { width: frameWidth, height: frameHeight, x: frameX, y: frameY } = frame || window.get_frame_rect()
+	const { width: bufferWidth, height: bufferHeight, x: bufferX, y: bufferY } = buffer || window.get_buffer_rect()
 	const maximizedHorizontally = window.maximized_horizontally
 	const maximizedVertically = window.maximized_vertically
-	const top = frameY-bufferY
-	const bottom = (bufferY+bufferHeight)-(frameY+frameHeight)
-	const left = frameX-bufferX
-	const right = (bufferX+bufferWidth)-(frameX+frameWidth)
-	const vertical = top+bottom
-	const horizontal = left+right
-	const verticalShadowRatio = vertical/bufferHeight
-	const horizontalShadowRatio = horizontal/bufferWidth
+	const top = frameY - bufferY
+	const bottom = (bufferY + bufferHeight) - (frameY + frameHeight)
+	const left = frameX - bufferX
+	const right = (bufferX + bufferWidth) - (frameX + frameWidth)
+	const vertical = top + bottom
+	const horizontal = left + right
+	const verticalShadowRatio = vertical / bufferHeight
+	const horizontalShadowRatio = horizontal / bufferWidth
 
 	return {
 		top, bottom, left, right,
@@ -511,20 +523,76 @@ export function getShadowSize(window) {
 		maximizedHorizontally, maximizedVertically,
 		maximized: maximizedVertically || maximizedHorizontally,
 		verticalShadowRatio, horizontalShadowRatio,
-		horizontalFrameRatio: 1-horizontalShadowRatio,
-		verticalFrameRatio: 1-verticalShadowRatio,
+		horizontalFrameRatio: 1 - horizontalShadowRatio,
+		verticalFrameRatio: 1 - verticalShadowRatio,
 		horizontal, vertical,
 	}
 }
 
+export function sleep(ms) {
+	return new Promise(r => GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms || 1, () => {
+		r()
+		return GLib.SOURCE_REMOVE
+	}))
+}
+
+export function sleep_lazy(ms) {
+	return new Promise(r => GLib.timeout_add(GLib.PRIORITY_LOW, ms || 1, () => {
+		r()
+		return GLib.SOURCE_REMOVE
+	}))
+}
+
+export async function getMinSize(window) {
+	let { width: old_width, height: old_height } = window.get_frame_rect()
+	old_height += 100
+	old_height += 100
+	window.get_compositor_private()._noAnimation = true
+	window.unmaximize(Meta.MaximizeFlags.BOTH)
+	window.move_resize_frame(true, 100, 100, old_width, old_height)
+	window.unmaximize(Meta.MaximizeFlags.BOTH)
+	await sleep_lazy(50)
+	let minWidth, minHeight
+	let resizeWait = new Promise(r => {
+		let connection = window.connect("size-changed", () => {
+			const { width, height } = window.get_frame_rect()
+			if (width == old_width && height == old_height) return
+			minWidth = width
+			minHeight = height
+			window.disconnect(connection)
+			connection = null
+			r()
+		})
+	})
+	window.move_resize_frame(true, 101, 101, 0, 0)
+	await resizeWait
+	window.get_compositor_private()._noAnimation = false
+	return [minWidth, minHeight]
+}
+
+export function cloneWindow(actor, height, width, x, y) {
+	return new Clutter.Actor({
+		height, width, x, y,
+		content: actor.paint_to_content(null),
+	})
+}
+
+export function getSpeed(shadow, toWidth, toHeight, exp, base, top) {
+	// Calculate speed by vec length
+	const length = Math.sqrt(Math.pow(Math.abs(shadow.frameWidth - toWidth), 2) + Math.pow(Math.abs(shadow.frameHeight - toHeight), 2))
+	const naturalSpeedinessMul = Math.pow(Math.min(length, 800) / 800, exp)
+
+	return naturalSpeedinessMul * (top - base) + base
+}
+
 // Caclulate resize animation size
-export function getResizeAnimationSize(shadow,toX,toY,toWidth,toHeight) {
+export function getResizeAnimationSize(shadow, toX, toY, toWidth, toHeight) {
 	const widthWithShadow = toWidth + shadow.horizontal
 	const heightWithShadow = toHeight + shadow.vertical
 	const afterVerticalShadowRatio = shadow.vertical / heightWithShadow
 	const afterHorizontalShadowRatio = shadow.horizontal / widthWithShadow
-	const afterVerticalFrameRatio = 1-afterVerticalShadowRatio
-	const afterHorizontalFrameRatio = 1-afterHorizontalShadowRatio
+	const afterVerticalFrameRatio = 1 - afterVerticalShadowRatio
+	const afterHorizontalFrameRatio = 1 - afterHorizontalShadowRatio
 
 	// 1 / from * to => How many times did it increase or decrease
 	// (total ratio including shadows) * (how much frame ratio increase or decrease)
@@ -532,14 +600,14 @@ export function getResizeAnimationSize(shadow,toX,toY,toWidth,toHeight) {
 	// normal case: buffer:1{frame:0.5 shadow:0.5}, buffer:0.5{frame:0.8 shadow:0.2}
 	// resize buffer:1 to buffer:0.5, buffer:0.5{frame:0.5,shadow:0.5} frame=0.5*0.5 << not match with 0.5*0.8
 	// buffer:(0.5 ×(1÷0.5*0.8) = 0.8){frame:0.5,shadow: 0.5} frame=0.8*0.5 << match with 0.5*0.8
-	const cloneGoalScaleX = widthWithShadow/shadow.bufferWidth / shadow.horizontalFrameRatio * afterHorizontalFrameRatio
-	const cloneGoalScaleY = heightWithShadow/shadow.bufferHeight / shadow.verticalFrameRatio * afterVerticalFrameRatio
-	const actorInitScaleX = shadow.bufferWidth/widthWithShadow * shadow.horizontalFrameRatio / afterHorizontalFrameRatio
-	const actorInitScaleY = shadow.bufferHeight/heightWithShadow * shadow.verticalFrameRatio / afterVerticalFrameRatio
+	const cloneGoalScaleX = widthWithShadow / shadow.bufferWidth / shadow.horizontalFrameRatio * afterHorizontalFrameRatio
+	const cloneGoalScaleY = heightWithShadow / shadow.bufferHeight / shadow.verticalFrameRatio * afterVerticalFrameRatio
+	const actorInitScaleX = shadow.bufferWidth / widthWithShadow * shadow.horizontalFrameRatio / afterHorizontalFrameRatio
+	const actorInitScaleY = shadow.bufferHeight / heightWithShadow * shadow.verticalFrameRatio / afterVerticalFrameRatio
 
 	// place clone with *shadow position ignored
-	const cloneGoalX = toX-shadow.left*cloneGoalScaleX
-	const cloneGoalY = toY-shadow.top*cloneGoalScaleY
+	const cloneGoalX = toX - shadow.left * cloneGoalScaleX
+	const cloneGoalY = toY - shadow.top * cloneGoalScaleY
 
 	// place actor with *shadow position ignored
 	const actorInitX = shadow.frameX - shadow.left * actorInitScaleX
@@ -568,17 +636,17 @@ export function getResizeAnimationSize(shadow,toX,toY,toWidth,toHeight) {
 }
 
 export class GrabOp {
-	static NSEW_MASK          = 0b1111_0000_00000000
-	static NORTH              = 0b1000_0000_00000000
-	static SOUTH              = 0b0100_0000_00000000
-	static EAST               = 0b0010_0000_00000000
-	static WEST               = 0b0001_0000_00000000
+	static NSEW_MASK = 0b1111_0000_00000000
+	static NORTH = 0b1000_0000_00000000
+	static SOUTH = 0b0100_0000_00000000
+	static EAST = 0b0010_0000_00000000
+	static WEST = 0b0001_0000_00000000
 
-	static FLAG_KEYBOARD      = 0b0000_0001_00000000
-	static FLAG_UNKNOWN       = 0b0000_0010_00000000
+	static FLAG_KEYBOARD = 0b0000_0001_00000000
+	static FLAG_UNKNOWN = 0b0000_0010_00000000
 	static FLAG_UNCONSTRAINED = 0b0000_0100_00000000
 
-	static KEYBOARD_UNKNOWN   = 0b0000_0011_00000000
+	static KEYBOARD_UNKNOWN = 0b0000_0011_00000000
 
 	constructor(op) {
 		this.op = op
@@ -595,7 +663,7 @@ export class GrabOp {
 	}
 	isFacing(...faces) {
 		let sumface = 0
-		faces.forEach(face=>sumface |= face)
+		faces.forEach(face => sumface |= face)
 		return (this.op & GrabOp.NSEW_MASK) === sumface
 	}
 }
@@ -656,11 +724,11 @@ export class StaticBlur {
 			sigma: this.#sigma * global.display.get_monitor_scale(this.#monitorIndex),
 			mode: Shell.BlurMode.ACTOR
 		})
-		this.#background.add_effect_with_name("blur",this.#blur)
+		this.#background.add_effect_with_name("blur", this.#blur)
 
 		// add whole to target / create connection / update rect
 		if (this.#target) {
-			this.#target.insert_child_at_index(this.#background_parent,0)
+			this.#target.insert_child_at_index(this.#background_parent, 0)
 		}
 		this.updateRect(this.#rect)
 		this.#createConnection()
@@ -668,14 +736,14 @@ export class StaticBlur {
 	disable() {
 		if (!this.#enabled) return
 		this.#destroyConnection()
-		safeDestroy(this.#blur,this.#background,this.#background_parent)
+		safeDestroy(this.#blur, this.#background, this.#background_parent)
 		this.#blur = this.#background = this.#background_parent = null
 		this.#enabled = false
 	}
 	reset() {
 		if (!this.#enabled) return
 		this.disable()
-		GLib.timeout_add(GLib.PRIORITY_DEFAULT,1,()=>{
+		GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1, () => {
 			if (this.#disposed || this.#enabled) return GLib.SOURCE_REMOVE
 			this.enable()
 			return GLib.SOURCE_REMOVE
@@ -710,7 +778,7 @@ export class StaticBlur {
 	#connection_monitor
 	#createConnection() {
 		// background chnage
-		this.#connection_background = Main.layoutManager._backgroundGroup.connect('notify',this.#setBackground.bind(this))
+		this.#connection_background = Main.layoutManager._backgroundGroup.connect('notify', this.#setBackground.bind(this))
 
 		// connect to monitors change
 		this.#connection_monitor = Main.layoutManager.connect('monitors-changed', this.reset.bind(this))
@@ -748,7 +816,7 @@ export class StaticBlur {
 	get visible() { return this.#visible }
 	get target() { return this.#target }
 	get actor() { return this.#background_parent }
-	
+
 	// common setter
 	set monitorIndex(monitorIndex) {
 		this.#monitorIndex = monitorIndex
@@ -763,7 +831,7 @@ export class StaticBlur {
 	set sigma(sigma) {
 		this.#sigma = sigma
 		if (this.#enabled && this.#blur) {
-			this.#blur.sigma =  sigma * global.display.get_monitor_scale(this.#monitorIndex)
+			this.#blur.sigma = sigma * global.display.get_monitor_scale(this.#monitorIndex)
 		}
 	}
 	set x(x) {
@@ -789,7 +857,7 @@ export class StaticBlur {
 		this.#target = target
 		if (this.#enabled && this.#background_parent) {
 			if (lastTarget) lastTarget.remove_child(this.#background_parent)
-			target.insert_child_at_index(this.#background_parent,0)
+			target.insert_child_at_index(this.#background_parent, 0)
 		}
 	}
 }
@@ -807,7 +875,7 @@ export class Unresizabler {
 		Meta.GrabOp.RESIZING_W,
 	]
 
-	constructor(window,allowResizeChecker,getTargetSize) {
+	constructor(window, allowResizeChecker, getTargetSize) {
 		window._unresizabler = true
 		{
 			const rect = window.get_frame_rect()
@@ -816,13 +884,13 @@ export class Unresizabler {
 			window.savedWidth = rect.width
 			window.savedHeight = rect.height
 		}
-		window._unresizabler_positionsave = window.connect("position-changed",window=>{
+		window._unresizabler_positionsave = window.connect("position-changed", window => {
 			const rect = window.get_frame_rect()
 			if (rect.width != window.savedWidth || rect.height != window.savedHeight) return
 			window.savedX = rect.x
 			window.savedY = rect.y
 		})
-		window._unresizabler_resizer = window.connect("size-changed",window=>{
+		window._unresizabler_resizer = window.connect("size-changed", window => {
 			if (window._unresizabler_change) return
 			const rect = window.get_frame_rect()
 			if (allowResizeChecker(rect) || (rect.width == window.savedWidth && rect.height == window.savedHeight)) {
@@ -881,14 +949,14 @@ export class WindowInitedHandler {
 
 	init() {
 		if (this.#method == "map") {
-			this.windowCreatedEvent = global.window_manager.connect("map", (_, actor)=>this.windowCreated(actor.metaWindow))
+			this.windowCreatedEvent = global.window_manager.connect("map", (_, actor) => this.windowCreated(actor.metaWindow))
 		} else {
-			this.windowCreatedEvent = global.display.connect("window-created", (_,window)=>this.windowCreated(window))
+			this.windowCreatedEvent = global.display.connect("window-created", (_, window) => this.windowCreated(window))
 		}
 		global.get_window_actors()
-			.map(actor=>actor.meta_window)
-			.filter(window=>window)
-			.forEach(window=>this.windowCreated(window,true))
+			.map(actor => actor.meta_window)
+			.filter(window => window)
+			.forEach(window => this.windowCreated(window, true))
 		this.windowDestroyEvent = global.window_manager.connect("destroy", (e, actor) => {
 			const window = actor.meta_window
 			if (!window) return
@@ -897,18 +965,18 @@ export class WindowInitedHandler {
 		return this
 	}
 
-	windowCreated(window,firstTime) {
+	windowCreated(window, firstTime) {
 		if (this.#filter) {
 			if (!this.#filter(window)) return
 		}
 		this.windows.push(window)
-		if (this.#initWindow) this.#initWindow(window,firstTime||false)
+		if (this.#initWindow) this.#initWindow(window, firstTime || false)
 	}
 
 	windowDestroying(window) {
 		const index = this.windows.indexOf(window)
 		if (index == -1) return
-		this.windows.splice(index,1)
+		this.windows.splice(index, 1)
 		if (this.#uninitWindow) this.#uninitWindow(window)
 	}
 
@@ -941,7 +1009,7 @@ export function isNormal(window) {
 	return window.window_type === Meta.WindowType.NORMAL
 }
 
-export const RENDER_DELAY = 3+1 // ignore initial call / first frame call (on resized) / after call (window redraw) + time to render window
+export const RENDER_DELAY = 4 // ignore initial call / first frame call (on resized) / after call (window redraw) + time to render window
 
 export var WindowMover = class WindowMover {
 	constructor() {
@@ -950,12 +1018,12 @@ export var WindowMover = class WindowMover {
 
 	// deinit all animations
 	destroy() {
-		this._windowAnimations.forEach(animation=>this._destroyAnimation(animation))
+		this._windowAnimations.forEach(animation => this._destroyAnimation(animation))
 		this._windowAnimations = null
 	}
 
 	// capture window content and create clone clutter
-	_captureWindow(window_actor,rect) {
+	_captureWindow(window_actor, rect) {
 		return new Clutter.Actor({
 			height: rect.height,
 			width: rect.width,
@@ -967,13 +1035,13 @@ export var WindowMover = class WindowMover {
 
 	// give time to redraw it selfs to application
 	// If canceled, return true
-	_delayFrames(actor,animation) {
-		return new Promise(resolve=>{
-			const timeline = animation.timeline = new Clutter.Timeline({ actor:actor,duration: 1000 })
+	_delayFrames(actor, animation) {
+		return new Promise(resolve => {
+			const timeline = animation.timeline = new Clutter.Timeline({ actor: actor, duration: 1000 })
 			let count = 0
 			animation.resolve = resolve
-			animation.newframe = timeline.connect("new-frame",()=>{
-				if (++count < RENDER_DELAY) return 
+			animation.newframe = timeline.connect("new-frame", () => {
+				if (++count < RENDER_DELAY) return
 				timeline.disconnect(animation.newframe)
 				timeline.run_dispose()
 				animation.resolve = animation.newframe = animation.timeline = null
@@ -984,13 +1052,13 @@ export var WindowMover = class WindowMover {
 	}
 
 	// destroy last animation, Also cancel delayFraems
-	_destroyAnimation(animation,keepTransitions) {
+	_destroyAnimation(animation, keepTransitions) {
 		const actor = animation.actor
 
 		// remove animation from lists
 		const index = this._windowAnimations.indexOf(animation)
-		if (index != -1) this._windowAnimations.splice(index,1)
-		
+		if (index != -1) this._windowAnimations.splice(index, 1)
+
 		// kill transitions
 		if (!keepTransitions) {
 			animation?.clone?.remove_all_transitions()
@@ -1018,77 +1086,82 @@ export var WindowMover = class WindowMover {
 	}
 
 	async setWindowRect(window, x, y, width, height, animate, clone, beforeShadow) {
-	if (!animate) {
-		clone.destroy()
-		clone = null
-	}
+		if (!animate) {
+			clone.destroy()
+			clone = null
+		}
 		const actor = window.get_compositor_private()
-		const lastAnimation = this._windowAnimations.find(item=>item.window === window)
+		const lastAnimation = this._windowAnimations.find(item => item.window === window)
 		const thisAnimation = {}
 
-		// Calculate before size / position
-	beforeShadow ??= getShadowSize(window)
-	const animationSize = getResizeAnimationSize(beforeShadow,x,y,width,height)
+		// Calculate before size / position, speed
+		beforeShadow ??= getShadowSize(window)
+		const animationSize = getResizeAnimationSize(beforeShadow, x, y, width, height)
+		const speed = getSpeed(beforeShadow, width, height, 0.86, 0.9, 1.2)
 
 		// destroy last animation and freeze actor
-		if (lastAnimation) this._destroyAnimation(lastAnimation,animate) // destroy old animation (but keep keep transitions for smoother)
-		actor.freeze() // do not render while real resizing done
+		if (lastAnimation) this._destroyAnimation(lastAnimation, animate) // destroy old animation (but keep keep transitions for smoother)
 
 		// unmaximize
 		if (beforeShadow.maximized) {
 			// clone actor before unmaximize for animate maxed -> tiled
-			clone ??= animate && this._captureWindow(actor,actor)
+			clone ??= animate && this._captureWindow(actor, actor)
 			window.unmaximize(Meta.MaximizeFlags.BOTH)
 			actor.remove_all_transitions() // remove unmaximize animation
 		}
 
 		// in another workspace
 		if (!window.showing_on_its_workspace()) {
-			if (lastAnimation) this._destroyAnimation(lastAnimation,animate)
+			if (lastAnimation) this._destroyAnimation(lastAnimation, animate)
 			window.move_resize_frame(true, x, y, width, height)
-			actor.thaw()
+			return
+		}
+
+		// if no animate
+		if (!animate) {
+			window.move_resize_frame(true, x, y, width, height)
 			return
 		}
 
 		// save this animation / clone window
 		if (animate) {
-			thisAnimation.clone = clone ??= this._captureWindow(actor,actor)
+			thisAnimation.clone = clone ??= this._captureWindow(actor, actor)
 			thisAnimation.window = window
 			thisAnimation.actor = actor
 			this._windowAnimations.push(thisAnimation)
 		}
 
-		// resize meta window / wait for window ready
-		window.move_resize_frame(true, x, y, width, height)
-	window.move_frame(true,x,y) // some buggy window require this... (eg: gnome terminal)
-		if (!animate) { // if no animate
-			actor.thaw() // allow render window
-			return
-		}
-		const resultDelay = await this._delayFrames(actor,thisAnimation) // wait once for window size updating
-		if (lastAnimation) this._destroyAnimation(lastAnimation) // remove old transitions (actor easing)
-		if (resultDelay) return // If canceled, just return
-		if (clone.get_parent() === null) global.window_group.insert_child_above(clone,actor) // insert clone on screen
+		// insert clone on screen, hide window
+		if (clone.get_parent() === null) global.window_group.insert_child_above(clone, actor)
+		actor.opacity = 0
+		actor.show()
 
 		// Set real window actor position
 		actor.scale_x = animationSize.actorInitScaleX
 		actor.scale_y = animationSize.actorInitScaleY
 		actor.translation_x = animationSize.actorTranslationX
 		actor.translation_y = animationSize.actorTranslationY
-		actor.show()
-		actor.thaw() // allow render window
+
+		// resize meta window / wait for window ready
+		window.move_resize_frame(true, x, y, width, height)
+		window.move_frame(true, x, y) // some buggy window require this... (eg: gnome terminal)
+
+		const resultDelay = await this._delayFrames(actor, thisAnimation) // wait once for window size updating
+		if (lastAnimation) this._destroyAnimation(lastAnimation) // remove old transitions (actor easing)
+		if (resultDelay) return // If canceled, just return
+		actor.opacity = 255
 
 		// Clone animation
-		clone.ease_property('opacity', 0, {
-			duration: 220,
-			mode: Clutter.AnimationMode.EASE_OUT_QUART
-		})
+		// clone.ease_property('opacity', 0, {
+		// 	duration: 220,
+		// 	mode: Clutter.AnimationMode.EASE_OUT_QUART
+		// })
 		clone.ease({
 			scale_x: animationSize.cloneGoalScaleX,
 			scale_y: animationSize.cloneGoalScaleY,
 			x: animationSize.cloneGoalX,
 			y: animationSize.cloneGoalY,
-			duration: 385,//375,
+			duration: 385 * speed,//375,
 			mode: Clutter.AnimationMode.EASE_OUT_EXPO,//EASE_OUT_QUINT,
 		})
 
@@ -1098,17 +1171,24 @@ export var WindowMover = class WindowMover {
 			scale_y: 1,
 			translation_x: 0,
 			translation_y: 0,
-			duration: 385,//,375,
+			duration: 385 * speed,//,375,
 			mode: Clutter.AnimationMode.EASE_OUT_EXPO,//EASE_OUT_QUINT,
-			onStopped: ()=>{
-				const nowAnimation = this._windowAnimations.find(item=>item.window === window)
+			onStopped: () => {
+				const nowAnimation = this._windowAnimations.find(item => item.window === window)
 				if (nowAnimation?.clone === clone) this._destroyAnimation(nowAnimation)
 			}
+		})
+
+		// fade out
+		await sleep(10 * speed);
+		clone.ease_property('opacity', 0, {
+			duration: 120 * speed,
+			mode: Clutter.AnimationMode.EASE_OUT_QUART,
 		})
 	}
 }
 
-export function set(obj,props) {
+export function set(obj, props) {
 	for (const index in props) {
 		obj[index] = props[index]
 	}
@@ -1120,7 +1200,7 @@ export function safeDestroy(...actors) {
 	for (const actor of actors) {
 		if (actor === undefined || actor === null || actors.__destroyed) continue
 		if (actor.is_destroyed && actor.is_destroyed()) continue
-		try { actors.__destroyed = true } catch {}
+		try { actors.__destroyed = true } catch { }
 		if (actor.dispose) { actor.dispose(); continue }
 		else if (actor.destroy) { actor.destroy(); continue }
 		else if (actor.run_dispose) { actor.run_dispose(); continue }
@@ -1133,14 +1213,14 @@ export const FocusArray = new class FocusArray {
 	#settings
 	#windowInitedHandler
 
-	constructor() {}
+	constructor() { }
 
 	// Public functions
 	getTopWindowOfWorkspace(workspace) {
-		return this.array.find(window=>
+		return this.array.find(window =>
 			window.located_on_workspace(workspace)
 			&& window.showing_on_its_workspace() && (!window.minimized))
-		|| global.get_window_actors().find(actor=>actor.meta_window.get_wm_class()=="Nemo-desktop")?.meta_window
+			|| global.get_window_actors().find(actor => actor.meta_window.get_wm_class() == "Nemo-desktop")?.meta_window
 	}
 	focusTopWindowOfWorkspace(workspace) {
 		const firstWindow = this.getTopWindowOfWorkspace(workspace)
@@ -1153,7 +1233,7 @@ export const FocusArray = new class FocusArray {
 	#windowFocused(window) {
 		let index = this.array.indexOf(window)
 		if (index != -1) {
-			this.array.splice(index,1)
+			this.array.splice(index, 1)
 		}
 		this.array.unshift(window)
 	}
@@ -1163,7 +1243,7 @@ export const FocusArray = new class FocusArray {
 
 		// Make destroy/focus event handler
 		if (!window._focus_array_focus) {
-			window._focus_array_focus = window.connect('focus',()=>this.#windowFocused(window))
+			window._focus_array_focus = window.connect('focus', () => this.#windowFocused(window))
 		}
 	}
 	#uninitWindow(window) {
@@ -1179,12 +1259,12 @@ export const FocusArray = new class FocusArray {
 
 		// Load saved windows
 		const windowList = global.get_window_actors()
-			.map(actor=>actor.meta_window)
-			.filter(window=>window)
+			.map(actor => actor.meta_window)
+			.filter(window => window)
 		const lastWindowIds = this.#settings.get_strv("qe-ws-last-windows")
 		if (lastWindowIds) {
-			lastWindowIds.forEach(windowId=>{
-				let window = windowList.find(window=>window.get_description()==windowId)
+			lastWindowIds.forEach(windowId => {
+				let window = windowList.find(window => window.get_description() == windowId)
 				if (!window) return
 				let actor = window.get_compositor_private()
 				if (!actor) return
@@ -1204,16 +1284,16 @@ export const FocusArray = new class FocusArray {
 	disable() {
 		// Save focus array
 		const saveList = []
-		this.array.forEach(window=>{
+		this.array.forEach(window => {
 			if (!window) return
 			let actor = window.get_compositor_private()
 			if (!actor) return
 			if (actor.is_destroyed()) return
-			
-			saveList.push(""+window.get_description())
+
+			saveList.push("" + window.get_description())
 		})
-		this.#settings.set_strv("qe-ws-last-windows",saveList)
-	
+		this.#settings.set_strv("qe-ws-last-windows", saveList)
+
 		// Dispose All
 		this.#settings.run_dispose()
 		this.#windowInitedHandler.dispose()
@@ -1221,34 +1301,34 @@ export const FocusArray = new class FocusArray {
 	}
 }
 
-export function getOffset(from,to) {
+export function getOffset(from, to) {
 	const result = []
-	from.forEach((value,index)=>result.push(to[index]-value))
+	from.forEach((value, index) => result.push(to[index] - value))
 	return result
 }
-export function applyOffset(from,offset) {
+export function applyOffset(from, offset) {
 	const result = []
-	from.forEach((value,index)=>result.push(value-offset[index]))
+	from.forEach((value, index) => result.push(value - offset[index]))
 	return result
 }
-export function clamp(x,a,b) {
-	if (b<a) {
+export function clamp(x, a, b) {
+	if (b < a) {
 		const tmp = a
-		a=b
-		b=tmp
+		a = b
+		b = tmp
 	}
-	return Math.min(Math.max(x,a),b)
+	return Math.min(Math.max(x, a), b)
 }
 
 export const Pannel = new class Pannel {
-	constructor() {}
+	constructor() { }
 	/** @type { Maid } */
 	#Maid
 	enable() {
 		this.#Maid = new Maid()
-		this.#Maid.connectJob(Main.panel._leftBox,"child-added",this.reorder.bind(this))
-		this.#Maid.connectJob(Main.panel._rightBox,"child-added",this.reorder.bind(this))
-		this.#Maid.connectJob(Main.panel._centerBox,"child-added",this.reorder.bind(this))
+		this.#Maid.connectJob(Main.panel._leftBox, "child-added", this.reorder.bind(this))
+		this.#Maid.connectJob(Main.panel._rightBox, "child-added", this.reorder.bind(this))
+		this.#Maid.connectJob(Main.panel._centerBox, "child-added", this.reorder.bind(this))
 		this.items = []
 		this.reversedItems = []
 		this.reordering = false
@@ -1265,14 +1345,14 @@ export const Pannel = new class Pannel {
 	Center = 1;
 	Right = 2;
 
-	add(item,side,index,name) {
-		if (index<0) {
-			this.reversedItems.push({item,side,index: -index,name})
+	add(item, side, index, name) {
+		if (index < 0) {
+			this.reversedItems.push({ item, side, index: -index, name })
 		} else {
-			this.items.push({item,side,index,name})
+			this.items.push({ item, side, index, name })
 		}
 
-		return ()=>{
+		return () => {
 			this.remove(item)
 		}
 	}
@@ -1291,7 +1371,7 @@ export const Pannel = new class Pannel {
 	}
 
 	resolveItems(items) {
-		return items.map(item=>{
+		return items.map(item => {
 			const newItem = {}
 
 			if (typeof item.item === "function") {
@@ -1313,10 +1393,10 @@ export const Pannel = new class Pannel {
 	remove(item) {
 		const i = this.items.indexOf(item)
 		const ri = this.reversedItems.indexOf(item)
-		if (i>0) {
-			this.items.splice(i,1)
-		} else if (ri>0) {
-			this.items.splice(ri,1)
+		if (i > 0) {
+			this.items.splice(i, 1)
+		} else if (ri > 0) {
+			this.items.splice(ri, 1)
 		}
 	}
 
@@ -1324,18 +1404,18 @@ export const Pannel = new class Pannel {
 		if (this.reordering) return
 		try {
 			this.reordering = true
-			const resolvedItems = this.resolveItems(this.items).sort((a,b)=>a.index-b.index), resolvedReversedItems = this.resolveItems(this.reversedItems).sort((a,b)=>b.index-a.index)
-			resolvedItems.forEach(item=>this.removeFromPannel(item.item))
-			resolvedReversedItems.forEach(item=>this.removeFromPannel(item.item))
-			let idx=0
-			resolvedItems.forEach(item=>{
-				console.log(item.index,item.name)
+			const resolvedItems = this.resolveItems(this.items).sort((a, b) => a.index - b.index), resolvedReversedItems = this.resolveItems(this.reversedItems).sort((a, b) => b.index - a.index)
+			resolvedItems.forEach(item => this.removeFromPannel(item.item))
+			resolvedReversedItems.forEach(item => this.removeFromPannel(item.item))
+			let idx = 0
+			resolvedItems.forEach(item => {
+				console.log(item.index, item.name)
 				if (!item.item) return
-				if (item.side == this.Left) Main.panel._leftBox.insert_child_at_index(item.item,idx++)
-				if (item.side == this.Right) Main.panel._rightBox.insert_child_at_index(item.item,idx++)
-				if (item.side == this.Center) Main.panel._centerBox.insert_child_at_index(item.item,idx++)
+				if (item.side == this.Left) Main.panel._leftBox.insert_child_at_index(item.item, idx++)
+				if (item.side == this.Right) Main.panel._rightBox.insert_child_at_index(item.item, idx++)
+				if (item.side == this.Center) Main.panel._centerBox.insert_child_at_index(item.item, idx++)
 			})
-			resolvedReversedItems.forEach(item=>{
+			resolvedReversedItems.forEach(item => {
 				if (!item.item) return
 				if (item.side == this.Left) Main.panel._leftBox.add_child(item.item)
 				if (item.side == this.Right) Main.panel._rightBox.add_child(item.item)
