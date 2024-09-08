@@ -546,14 +546,17 @@ export function sleep_lazy(ms) {
 // get window min size with hacky method, after this op,
 // size and position of window will strange. you should move and resize
 export async function getMinSize(window) {
-	let { width: old_width, height: old_height } = window.get_frame_rect()
+	const actor = window.get_compositor_private()
+	let { width: old_width, height: old_height, x, y } = window.get_frame_rect()
 	old_height += 100
 	old_height += 100
-	window.get_compositor_private()._noAnimation = true
+	actor._noAnimation = true
 	window.unmaximize(Meta.MaximizeFlags.BOTH)
-	window.move_resize_frame(true, 100, 100, old_width, old_height)
+	window.move_resize_frame(false, x, y, old_width, old_height)
 	window.unmaximize(Meta.MaximizeFlags.BOTH)
-	await sleep_lazy(50)
+	actor.remove_all_transitions()
+	await delayFrames(actor, window)
+	//await sleep_lazy(0)
 	let minWidth, minHeight
 	let resizeWait = new Promise(r => {
 		let connection = window.connect("size-changed", () => {
@@ -566,9 +569,9 @@ export async function getMinSize(window) {
 			r()
 		})
 	})
-	window.move_resize_frame(true, 101, 101, 0, 0)
+	window.move_resize_frame(false, x, y, 101, 0, 0)
 	await resizeWait
-	window.get_compositor_private()._noAnimation = false
+	actor._noAnimation = false
 	return [minWidth, minHeight]
 }
 

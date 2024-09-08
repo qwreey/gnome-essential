@@ -14,7 +14,7 @@ import {
 
 const maximizeOps = [Meta.SizeChange.UNMAXIMIZE, Meta.SizeChange.MAXIMIZE]
 const fullscreenOps = [Meta.SizeChange.FULLSCREEN, Meta.SizeChange.UNFULLSCREEN]
-const allowedOps = [...maximizeOps, ...fullscreenOps]
+const allowedOps = [...maximizeOps] //, ...fullscreenOps]
 
 // FIXME: try super -> <- ... something unexpected
 

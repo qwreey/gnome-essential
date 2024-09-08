@@ -44,8 +44,8 @@ export class OpenCloseAnimation {
 
 				actor.remove_all_transitions()
 				actor.set_pivot_point(0.5, 0.5)
-				actor.scale_x = 0.6
-				actor.scale_y = 0.6
+				actor.scale_x = 0.74
+				actor.scale_y = 0.74
 				actor.opacity = 160
 
 				actor.ease({
@@ -212,8 +212,8 @@ export class OpenCloseAnimation {
 
 				clone.ease({
 					opacity: 0,
-					scale_x: 0.9,
-					scale_y: 0.9,
+					scale_x: 0.94,
+					scale_y: 0.94,
 					duration: 280,
 					mode: Clutter.AnimationMode.EASE_OUT_EXPO,
 					onStopped: () => clone.destroy()

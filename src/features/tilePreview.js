@@ -78,7 +78,7 @@ const TilePreviewFrame = GObject.registerClass(
 				let [, rect] = this.lastWindow.get_frame_rect().intersect(monitorRect)
 
 				this.ease({
-					opacity: 100,
+					opacity: 0,
 					duration: 260,
 					x: rect.x + 6,
 					y: rect.y + 6,
