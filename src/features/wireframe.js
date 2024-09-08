@@ -389,7 +389,9 @@ export class Wireframe {
 		global.display.set_cursor(Meta.Cursor.DEFAULT)
 
 		// Create resize animation on clone actor
-		this.#windowMover.setWindowRect(window, newX, newY, newWidth, newHeight, true, this.#draggedWindowClone, this.#draggedPos)
+		this.#windowMover
+			.setWindowRect(window, newX, newY, newWidth, newHeight, this.#draggedWindowClone, this.#draggedPos)
+			.catch(log)
 		this.#draggedWindowActor = this.#draggedWindowClone = this.#draggedWindow = null
 	}
 	pointerMove(x, y) {

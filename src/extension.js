@@ -103,7 +103,7 @@ export default class MainExtension extends Extension {
 			// new TransparentPanel(),
 			new MinimizeAnimation(),
 			// new AddDateMenuIcon(),
-			new MoveAnimation(),
+			// new MoveAnimation(),
 			new OpenCloseAnimation(),
 			// new ThemeHandle(),
 			// new LapyIsCute(),

@@ -150,17 +150,15 @@ export class MinimizeAnimation {
 	}
 
 	disable() {
-		global.window_manager.disconnect(this.minimizeId)
-		global.window_manager.disconnect(this.unminimizeId)
-		this.minimizeId = this.unminimizeId = null
+		this.#maid.destroy()
+		this.#maid = null
 
 		global.get_window_actors().forEach(actor => this.destroyActorEffect(actor))
 
-		Main.wm._shouldAnimateActor = this.orig_shouldAnimateActor
 		Main.wm._shellwm.completed_minimize = this.orig_completed_minimize
 		Main.wm._shellwm.completed_unminimize = this.orig_completed_unminimize
-		this.orig_shouldAnimateActor = this.orig_completed_minimize = this.orig_completed_unminimize = null
-		this.shouldAnimateActor = this.completed_minimize = this.completed_unminimize = null
+		this.orig_completed_minimize = this.orig_completed_unminimize = null
+		this.completed_minimize = this.completed_unminimize = null
 	}
 
 	destroyActorEffect(actor) {

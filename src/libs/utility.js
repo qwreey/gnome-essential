@@ -569,7 +569,7 @@ export async function getMinSize(window) {
 			r()
 		})
 	})
-	window.move_resize_frame(false, x, y, 101, 0, 0)
+	window.move_resize_frame(false, x, y, 0, 0)
 	await resizeWait
 	actor._noAnimation = false
 	return [minWidth, minHeight]
@@ -1050,93 +1050,84 @@ export const WindowMover = class WindowMover {
 		this._windowAnimations = null
 	}
 
-	// capture window content and create clone clutter
-	_captureWindow(window_actor, rect) {
-		return cloneWindow(window_actor, rect.height, rect.width, rect.x, rect.y)
-	}
+	// // capture window content and create clone clutter
+	// _captureWindow(window_actor, rect) {
+	// 	return cloneWindow(window_actor, rect.height, rect.width, rect.x, rect.y)
+	// }
 
 	// destroy last animation, Also cancel delayFraems
-	_destroyAnimation(animation, keepTransitions) {
-		const actor = animation.actor
+	// _destroyAnimation(animation, keepTransitions) {
+	// 	const actor = animation.actor
 
-		// remove animation from lists
-		const index = this._windowAnimations.indexOf(animation)
-		if (index != -1) this._windowAnimations.splice(index, 1)
+	// 	// remove animation from lists
+	// 	const index = this._windowAnimations.indexOf(animation)
+	// 	if (index != -1) this._windowAnimations.splice(index, 1)
 
-		// kill transitions
-		if (!keepTransitions) {
-			animation?.clone?.remove_all_transitions()
-			animation?.clone?.destroy()
-			if (actor) {
-				actor.remove_all_transitions()
-				actor.scale_x = 1
-				actor.scale_y = 1
-				actor.translation_x = 0
-				actor.translation_y = 0
-			}
-			animation.clone = animation.actor = animation.window = null
-		}
+	// 	// kill transitions
+	// 	if (!keepTransitions) {
+	// 		animation?.clone?.remove_all_transitions()
+	// 		animation?.clone?.destroy()
+	// 		if (actor) {
+	// 			actor.remove_all_transitions()
+	// 			actor.scale_x = 1
+	// 			actor.scale_y = 1
+	// 			actor.translation_x = 0
+	// 			actor.translation_y = 0
+	// 		}
+	// 		animation.clone = animation.actor = animation.window = null
+	// 	}
 
-		// kill last delay
-		const timeline = animation?.timeline
-		if (timeline) {
-			timeline.disconnect(animation.newframe)
-			timeline.run_dispose()
-			const resolve = animation.resolve
-			actor.thaw()
-			animation.resolve = animation.newframe = animation.timeline = null
-			resolve(true)
-		}
-	}
+	// 	// kill last delay
+	// 	const timeline = animation?.timeline
+	// 	if (timeline) {
+	// 		timeline.disconnect(animation.newframe)
+	// 		timeline.run_dispose()
+	// 		const resolve = animation.resolve
+	// 		actor.thaw()
+	// 		animation.resolve = animation.newframe = animation.timeline = null
+	// 		resolve(true)
+	// 	}
+	// }
 
-	async setWindowRect(window, x, y, width, height, animate, clone, beforeShadow) {
-		if (!animate) {
-			clone.destroy()
-			clone = null
-		}
+	async setWindowRect(window, x, y, width, height, clone, beforeShadow) {
 		const actor = window.get_compositor_private()
-		const lastAnimation = this._windowAnimations.find(item => item.window === window)
-		const thisAnimation = {}
 
 		// Calculate before size / position, speed
 		beforeShadow ??= getShadowSize(window)
 		const animationSize = getResizeAnimationSize(beforeShadow, x, y, width, height)
 		const speed = getSpeed(beforeShadow, width, height, 0.86, 0.9, 1.2)
 
-		// destroy last animation and freeze actor
-		if (lastAnimation) this._destroyAnimation(lastAnimation, animate) // destroy old animation (but keep keep transitions for smoother)
+		// Remove old animations
+		if (actor.__QE_UMOVER_clone && !actor.__QE_UMOVER_clone.__destroyed) {
+			actor.__QE_UMOVER_clone.__destroyed = true
+			actor.__QE_UMOVER_clone.destroy()
+			actor.__QE_UMOVER_clone = null
+		}
+		actor.remove_all_transitions()
 
-		// unmaximize
+		// Create clone
+		clone ??= cloneWindow(
+			actor,
+			sourceShadow.bufferHeight,
+			sourceShadow.bufferWidth,
+			sourceShadow.bufferX,
+			sourceShadow.bufferY
+		)
+		if (clone.get_parent() === null) {
+			global.window_group.insert_child_above(
+				clone,
+				actor
+			)
+		}
+		actor.__QE_UMOVER_clone = clone
+
+		// Unmaximize
 		if (beforeShadow.maximized) {
-			// clone actor before unmaximize for animate maxed -> tiled
-			clone ??= animate && this._captureWindow(actor, actor)
 			window.unmaximize(Meta.MaximizeFlags.BOTH)
-			actor.remove_all_transitions() // remove unmaximize animation
+			actor.remove_all_transitions()
 		}
 
-		// in another workspace
-		if (!window.showing_on_its_workspace()) {
-			if (lastAnimation) this._destroyAnimation(lastAnimation, animate)
-			window.move_resize_frame(true, x, y, width, height)
-			return
-		}
-
-		// if no animate
-		if (!animate) {
-			window.move_resize_frame(true, x, y, width, height)
-			return
-		}
-
-		// save this animation / clone window
-		if (animate) {
-			thisAnimation.clone = clone ??= this._captureWindow(actor, actor)
-			thisAnimation.window = window
-			thisAnimation.actor = actor
-			this._windowAnimations.push(thisAnimation)
-		}
-
-		// insert clone on screen, hide window
-		if (clone.get_parent() === null) global.window_group.insert_child_above(clone, actor)
+		// Hide real actor
 		actor.opacity = 0
 		actor.show()
 
@@ -1150,26 +1141,11 @@ export const WindowMover = class WindowMover {
 		window.move_resize_frame(true, x, y, width, height)
 		window.move_frame(true, x, y) // some buggy window require this... (eg: gnome terminal)
 
-		const resultDelay = await delayFrames(actor, thisAnimation) // wait once for window size updating
-		if (lastAnimation) this._destroyAnimation(lastAnimation) // remove old transitions (actor easing)
-		if (resultDelay) return // If canceled, just return
-		actor.opacity = 255
-
-		// Clone animation
-		// clone.ease_property('opacity', 0, {
-		// 	duration: 220,
-		// 	mode: Clutter.AnimationMode.EASE_OUT_QUART
-		// })
-		clone.ease({
-			scale_x: animationSize.cloneGoalScaleX,
-			scale_y: animationSize.cloneGoalScaleY,
-			x: animationSize.cloneGoalX,
-			y: animationSize.cloneGoalY,
-			duration: 385 * speed,//375,
-			mode: Clutter.AnimationMode.EASE_OUT_EXPO,//EASE_OUT_QUINT,
-		})
+		// Wait for paint
+		await delayFrames(actor, {})
 
 		// Real window animation
+		actor.opacity = 255
 		actor.ease({
 			scale_x: 1,
 			scale_y: 1,
@@ -1178,18 +1154,128 @@ export const WindowMover = class WindowMover {
 			duration: 385 * speed,//,375,
 			mode: Clutter.AnimationMode.EASE_OUT_EXPO,//EASE_OUT_QUINT,
 			onStopped: () => {
-				const nowAnimation = this._windowAnimations.find(item => item.window === window)
-				if (nowAnimation?.clone === clone) this._destroyAnimation(nowAnimation)
+				if (clone.__destroyed) return
+				clone.destroy()
 			}
 		})
 
-		// fade out
-		await sleep(10 * speed);
+		// Clone animation
+		clone.ease({
+			scale_x: animationSize.cloneGoalScaleX,
+			scale_y: animationSize.cloneGoalScaleY,
+			x: animationSize.cloneGoalX,
+			y: animationSize.cloneGoalY,
+			duration: 385 * speed,//375,
+			mode: Clutter.AnimationMode.EASE_OUT_EXPO,//EASE_OUT_QUINT,
+		})
+		await sleep(10 * speed)
 		clone.ease_property('opacity', 0, {
 			duration: 120 * speed,
 			mode: Clutter.AnimationMode.EASE_OUT_QUART,
 		})
 	}
+
+	// async setWindowRect(window, x, y, width, height, animate, clone, beforeShadow) {
+	// 	if (!animate) {
+	// 		clone.destroy()
+	// 		clone = null
+	// 	}
+	// 	const actor = window.get_compositor_private()
+	// 	const lastAnimation = this._windowAnimations.find(item => item.window === window)
+	// 	const thisAnimation = {}
+
+	// 	// Calculate before size / position, speed
+	// 	beforeShadow ??= getShadowSize(window)
+	// 	const animationSize = getResizeAnimationSize(beforeShadow, x, y, width, height)
+	// 	const speed = getSpeed(beforeShadow, width, height, 0.86, 0.9, 1.2)
+
+	// 	// destroy last animation and freeze actor
+	// 	if (lastAnimation) this._destroyAnimation(lastAnimation, animate) // destroy old animation (but keep keep transitions for smoother)
+
+	// 	// unmaximize
+	// 	if (beforeShadow.maximized) {
+	// 		// clone actor before unmaximize for animate maxed -> tiled
+	// 		clone ??= animate && this._captureWindow(actor, actor)
+	// 		window.unmaximize(Meta.MaximizeFlags.BOTH)
+	// 		actor.remove_all_transitions() // remove unmaximize animation
+	// 	}
+
+	// 	// in another workspace
+	// 	if (!window.showing_on_its_workspace()) {
+	// 		if (lastAnimation) this._destroyAnimation(lastAnimation, animate)
+	// 		window.move_resize_frame(true, x, y, width, height)
+	// 		return
+	// 	}
+
+	// 	// if no animate
+	// 	if (!animate) {
+	// 		window.move_resize_frame(true, x, y, width, height)
+	// 		return
+	// 	}
+
+	// 	// save this animation / clone window
+	// 	if (animate) {
+	// 		thisAnimation.clone = clone ??= this._captureWindow(actor, actor)
+	// 		thisAnimation.window = window
+	// 		thisAnimation.actor = actor
+	// 		this._windowAnimations.push(thisAnimation)
+	// 	}
+
+	// 	// insert clone on screen, hide window
+	// 	if (clone.get_parent() === null) global.window_group.insert_child_above(clone, actor)
+	// 	actor.opacity = 0
+	// 	actor.show()
+
+	// 	// Set real window actor position
+	// 	actor.scale_x = animationSize.actorInitScaleX
+	// 	actor.scale_y = animationSize.actorInitScaleY
+	// 	actor.translation_x = animationSize.actorTranslationX
+	// 	actor.translation_y = animationSize.actorTranslationY
+
+	// 	// resize meta window / wait for window ready
+	// 	window.move_resize_frame(true, x, y, width, height)
+	// 	window.move_frame(true, x, y) // some buggy window require this... (eg: gnome terminal)
+
+	// 	const resultDelay = await delayFrames(actor, thisAnimation) // wait once for window size updating
+	// 	if (lastAnimation) this._destroyAnimation(lastAnimation) // remove old transitions (actor easing)
+	// 	if (resultDelay) return // If canceled, just return
+	// 	actor.opacity = 255
+
+	// 	// Clone animation
+	// 	// clone.ease_property('opacity', 0, {
+	// 	// 	duration: 220,
+	// 	// 	mode: Clutter.AnimationMode.EASE_OUT_QUART
+	// 	// })
+	// 	clone.ease({
+	// 		scale_x: animationSize.cloneGoalScaleX,
+	// 		scale_y: animationSize.cloneGoalScaleY,
+	// 		x: animationSize.cloneGoalX,
+	// 		y: animationSize.cloneGoalY,
+	// 		duration: 385 * speed,//375,
+	// 		mode: Clutter.AnimationMode.EASE_OUT_EXPO,//EASE_OUT_QUINT,
+	// 	})
+
+	// 	// Real window animation
+	// 	actor.ease({
+	// 		scale_x: 1,
+	// 		scale_y: 1,
+	// 		translation_x: 0,
+	// 		translation_y: 0,
+	// 		duration: 385 * speed,//,375,
+	// 		mode: Clutter.AnimationMode.EASE_OUT_EXPO,//EASE_OUT_QUINT,
+	// 		onStopped: () => {
+	// 			const nowAnimation = this._windowAnimations.find(item => item.window === window)
+	// 			if (nowAnimation?.clone === clone) this._destroyAnimation(nowAnimation)
+	// 		}
+	// 	})
+
+	// 	// fade out
+	// 	await sleep(10 * speed);
+	// 	clone.ease_property('opacity', 0, {
+	// 		duration: 120 * speed,
+	// 		mode: Clutter.AnimationMode.EASE_OUT_QUART,
+	// 	})
+	// }
 }
 
 export function set(obj, props) {
