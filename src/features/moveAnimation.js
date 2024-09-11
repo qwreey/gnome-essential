@@ -1,6 +1,5 @@
 import Meta from "gi://Meta"
 import Clutter from "gi://Clutter"
-// import * as Main from "resource:///org/gnome/shell/ui/main.js"
 import {
 	getShadowSize,
 	getResizeAnimationSize,
@@ -8,7 +7,6 @@ import {
 	sleep,
 	cloneWindow,
 	ShouldAnimateActorHook,
-	delayFrames,
 	Maid
 } from "../libs/utility.js"
 

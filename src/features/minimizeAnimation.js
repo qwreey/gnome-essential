@@ -3,9 +3,7 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js"
 
 import {
 	ShouldAnimateActorHook,
-	delayFrames,
 	Maid,
-	waitForOverviewToHide,
 	sleep,
 } from "../libs/utility.js"
 
@@ -23,11 +21,9 @@ class AnimationHandler {
 
 	constructor(actor, icon, isOpening, onCompleted) {
 		actor.show()
-		// waitForOverviewToHide().then(() => {
 		if (isOpening) actor.visible = false
 		if (isOpening) sleep(100).then(this.init.bind(this, actor, icon, isOpening, onCompleted)).catch(log)
 		else this.init(actor, icon, isOpening, onCompleted)
-		// })
 	}
 
 	init(actor, icon, isOpening, onCompleted) {

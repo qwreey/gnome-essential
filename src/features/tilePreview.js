@@ -56,8 +56,8 @@ const TilePreviewFrame = GObject.registerClass(
 				width: Math.max(tileRect.width - 12, 0),
 				height: Math.max(tileRect.height - 12),
 				opacity: 255,
-				duration: 260, // WINDOW_ANIMATION_TIME,
-				mode: Clutter.AnimationMode.EASE_OUT_QUINT, // Clutter.AnimationMode.EASE_OUT_QUAD,
+				duration: 320, // WINDOW_ANIMATION_TIME,
+				mode: Clutter.AnimationMode.EASE_OUT_QUART, // Clutter.AnimationMode.EASE_OUT_QUAD,
 			});
 		}
 

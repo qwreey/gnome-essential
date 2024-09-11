@@ -366,6 +366,7 @@ export class Wireframe {
 	}
 	grapEnd(_d, window, op) {
 		if (this.#draggedWindow != window) return
+		this.#deferFn = null
 
 		// Remove wireframe
 		Main.layoutManager.removeChrome(this.#draggingWidget)
@@ -423,6 +424,7 @@ export class Wireframe {
 		this.updateDraggingWidget(newX, newY, newWidth, newHeight)
 	}
 	updateDraggingWidget(x, y, width, height) {
+		if (isNaN(x) || isNaN(y) || isNaN(width) || isNaN(height)) return
 		this.#draggingWidget.x = x
 		this.#draggingWidget.y = y
 		this.#draggingWidget.width = width
