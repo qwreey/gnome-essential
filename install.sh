@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+cd "$(dirname "$(readlink -f "$0")")"
+
 function update-po() {
 	echo '' > messages.po
 	[ "$?" != "0" ] && echo "update-po: Unable to create ./messages.po file" && return 1
@@ -50,6 +52,10 @@ function build() {
 	return 0
 }
 
+function enable() {
+	gnome-extensions enable qwreey-essential@qwreey
+}
+
 function install() {
 	build
 	[ "$?" != "0" ] && return 1
@@ -92,6 +98,7 @@ function usage() {
 	echo '                only works on x11 unsafe mode.'
 	echo '  log           show extension logs (live)'
 	echo '  clear-old-po  clear *.po~'
+	echo '  enable        enable extension'
 }
 
 case "$1" in
@@ -117,6 +124,10 @@ case "$1" in
 
 	"clear-old-po" )
 		clear-old-po
+	;;
+
+	"enable" )
+		enable
 	;;
     
     * )

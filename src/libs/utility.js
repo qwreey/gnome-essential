@@ -28,6 +28,7 @@ export class Maid {
 		Dispose: 2,
 		Destroy: 3,
 		SafeDestroy: 4,
+		Patch: 5,
 	}
 	static Priority = {
 		High: 2000,
@@ -40,36 +41,44 @@ export class Maid {
 	}
 
 	connectJob(signalObject, signalName, handleFunc, priority = 0) {
-		if (!this.#records) Error("Destroyed connection maid. connect() is not allowed")
-		this.#records.push([this.#TaskType.Connect, priority, signalObject, signalObject.connect(signalName, handleFunc)])
+		this.getRecords().push([this.#TaskType.Connect, priority, signalObject, signalObject.connect(signalName, handleFunc)])
 	}
 
 	functionJob(func, priority = 0) {
-		this.#records.push([this.#TaskType.Function, priority, func])
+		this.getRecords().push([this.#TaskType.Function, priority, func])
 	}
 
 	disposeJob(object, priority = 0) {
-		this.#records.push([this.#TaskType.Dispose, priority, object])
+		this.getRecords().push([this.#TaskType.Dispose, priority, object])
 	}
 
 	destroyJob(object, priority = 0) {
-		this.#records.push([this.#TaskType.Destroy, priority, object])
+		this.getRecords().push([this.#TaskType.Destroy, priority, object])
 	}
 
 	safeDestroyJob(object, priority = 0) {
-		this.#records.push([this.#TaskType.SafeDestroy, priority, object])
+		this.getRecords().push([this.#TaskType.SafeDestroy, priority, object])
 	}
 
 	destroy() {
-		if (!this.#records) Error("Destroyed connection maid. destroy() is not allowed")
 		this.clean()
 		this.#records = null
 	}
 
+	getRecords() {
+		if (!this.#records) Error("Destroyed connection maid. destroy() is not allowed")
+		return this.#records
+	}
+
+	patchJob(patchObject, patchName, handleFunc, priority = 0) {
+		this.getRecords().push([this.#TaskType.Patch, priority, patchObject, patchName, patchObject[patchName]])
+		patchObject[patchName] = handleFunc(patchObject[patchName])
+	}
+
 	clean() {
-		if (!this.#records) Error("Destroyed connection maid. clean() is not allowed")
-		this.#records.sort((a, b) => a[1] < b[1]) // Priority sorting
-		for (const record of this.#records) {
+		const records = this.getRecords()
+		records.sort((a, b) => a[1] < b[1]) // Priority sorting
+		for (const record of records) {
 			const taskType = record.splice(0, 2)[0]
 			switch (taskType) {
 				case this.#TaskType.Connect:
@@ -86,6 +95,9 @@ export class Maid {
 					break
 				case this.#TaskType.SafeDestroy:
 					safeDestroy(record[0])
+					break
+				case this.#TaskType.Patch:
+					record[0][record[1]] = record[2]
 					break
 				default:
 					throw Error("Unknown task type.")
@@ -529,6 +541,20 @@ export function getShadowSize(window, frame, buffer) {
 	}
 }
 
+// overview close wait
+export function waitForOverviewToHide() {
+	if (!Main.overview.visible) {
+		return Promise.resolve()
+	}
+
+	return new Promise(resolve => {
+		const id = Main.overview.connect('hidden', () => {
+			Main.overview.disconnect(id)
+			resolve()
+		})
+	})
+}
+
 // sleep
 export function sleep(ms) {
 	return new Promise(r => GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms || 1, () => {
@@ -589,7 +615,7 @@ export function getSpeed(shadow, toWidth, toHeight, exp, base, top) {
 	const length = Math.sqrt(Math.pow(Math.abs(shadow.frameWidth - toWidth), 2) + Math.pow(Math.abs(shadow.frameHeight - toHeight), 2))
 	const naturalSpeedinessMul = Math.pow(Math.min(length, 800) / 800, exp)
 
-	return naturalSpeedinessMul * (top - base) + base
+	return naturalSpeedinessMul * (top - base) + base * (global.animationSlowFactor || 1)
 }
 
 // Caclulate resize animation size
@@ -1098,10 +1124,8 @@ export const WindowMover = class WindowMover {
 		const speed = getSpeed(beforeShadow, width, height, 0.86, 0.9, 1.2)
 
 		// Remove old animations
-		if (actor.__QE_UMOVER_clone && !actor.__QE_UMOVER_clone.__destroyed) {
-			actor.__QE_UMOVER_clone.__destroyed = true
+		if (actor.__QE_UMOVER_clone) {
 			actor.__QE_UMOVER_clone.destroy()
-			actor.__QE_UMOVER_clone = null
 		}
 		actor.remove_all_transitions()
 
@@ -1142,7 +1166,10 @@ export const WindowMover = class WindowMover {
 		window.move_frame(true, x, y) // some buggy window require this... (eg: gnome terminal)
 
 		// Wait for paint
-		await delayFrames(actor, {})
+		// await delayFrames(actor, {})
+		await sleep(100)
+		if (actor.__QE_UMOVER_clone !== clone) return
+		if (actor.is_destroyed()) return
 
 		// Real window animation
 		actor.opacity = 255
@@ -1154,8 +1181,13 @@ export const WindowMover = class WindowMover {
 			duration: 385 * speed,//,375,
 			mode: Clutter.AnimationMode.EASE_OUT_EXPO,//EASE_OUT_QUINT,
 			onStopped: () => {
-				if (clone.__destroyed) return
+				if (actor.is_destroyed()) {
+					clone.destroy()
+					return
+				}
+				if (actor.__QE_UMOVER_clone !== clone) return
 				clone.destroy()
+				actor.__QE_UMOVER_clone = null
 			}
 		})
 
@@ -1169,6 +1201,7 @@ export const WindowMover = class WindowMover {
 			mode: Clutter.AnimationMode.EASE_OUT_EXPO,//EASE_OUT_QUINT,
 		})
 		await sleep(10 * speed)
+		if (actor.__QE_UMOVER_clone !== clone) return
 		clone.ease_property('opacity', 0, {
 			duration: 120 * speed,
 			mode: Clutter.AnimationMode.EASE_OUT_QUART,

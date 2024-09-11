@@ -14,9 +14,7 @@ import {
 
 // const maximizeOps = [Meta.SizeChange.UNMAXIMIZE, Meta.SizeChange.MAXIMIZE]
 // const fullscreenOps = [Meta.SizeChange.FULLSCREEN, Meta.SizeChange.UNFULLSCREEN]
-// const allowedOps = [Meta.SizeChange.UNMAXIMIZE, Meta.SizeChange.MAXIMIZE]
-
-// FIXME: try super -> <- ... something unexpected
+const allowedOps = [Meta.SizeChange.UNMAXIMIZE, Meta.SizeChange.MAXIMIZE]
 
 export class MoveAnimation {
 	constructor() { }
@@ -26,92 +24,126 @@ export class MoveAnimation {
 	before(actor, op, oldFrameRect, oldBufferRect) {
 		// check animatable
 		if (!actor.mapped) return
-		// if (allowedOps.includes(op) === -1) {
-		// 	log("op not allowed??")
-		// 	return
-		// }
+		if (allowedOps.includes(op) === -1) {
+			return
+		}
 		if (actor._noAnimation) return
-
 		// if (this.resizedActor) return
 		// if (actor.meta_window._unresizabler) return
 
 		// remove old animation
 		actor.remove_all_transitions()
-		if (actor.__QE_MOVE_capture && !actor.__QE_MOVE_capture.__destroyed) {
-			actor.__QE_MOVE_capture.__destroyed = true
+		if (actor.__QE_MOVE_capture) {
 			actor.__QE_MOVE_capture.destroy()
+			actor.__QE_MOVE_capture = null
+			if (actor.__QE_MOVE_freeze) {
+				actor.thaw()
+				actor.__QE_MOVE_freeze = null
+			}
 			this.completed_size_change(actor)
 		}
 
 		// save old position
-		const sourceShadow = actor.__QE_MOVE_source_shadow = getShadowSize(actor.meta_window, oldFrameRect, oldBufferRect)
-		global.window_group.insert_child_above(
-			actor.__QE_MOVE_capture = cloneWindow(
-				actor,
-				sourceShadow.bufferHeight,
-				sourceShadow.bufferWidth,
-				sourceShadow.bufferX,
-				sourceShadow.bufferY
-			),
-			actor
-		)
-		actor.opacity = 0
+		const source_shadow = actor.__QE_MOVE_source_shadow = getShadowSize(actor.meta_window, oldFrameRect, oldBufferRect)
 		actor.__QE_MOVE_resize_op = op
+
+		// create capture
+		const capture = actor.__QE_MOVE_capture = cloneWindow(
+			actor,
+			source_shadow.bufferHeight,
+			source_shadow.bufferWidth,
+			source_shadow.bufferX,
+			source_shadow.bufferY
+		)
+		actor.add_child(capture)
+		capture.hide()
+
+		// freeze
+		actor.freeze()
+		actor.__QE_MOVE_freeze = true
 	}
 
 	// // not works for now, how?
-	// async fullscreenAnimation(actor) {
-	// 	const shadow = getShadowSize(actor.meta_window)
+	async fullscreenAnimation(actor) {
+		// check before state
+		const source_shadow = actor.__QE_MOVE_source_shadow
+		actor.__QE_MOVE_source_shadow = null
+		if (!source_shadow) return
+		const op = actor.__QE_MOVE_resize_op || 0
+		const capture = actor.__QE_MOVE_capture
 
-	// 	const size = this.op === Meta.SizeChange.FULLSCREEN ? 80 : -100
-	// 	actor.scale_x = (shadow.frameWidth - size) / shadow.frameWidth
-	// 	actor.scale_y = (shadow.frameHeight - size) / shadow.frameHeight
-	// 	actor.translation_x = actor.translation_y = size / 2
+		// wait render
+		await sleep(100)
+		if (actor.is_destroyed()) return
+		if (actor.__QE_MOVE_capture !== capture) return
 
-	// 	actor.ease({
-	// 		scale_y: 1,
-	// 		translation_y: 0,
-	// 		mode: Clutter.AnimationMode.EASE_OUT_QUINT,
-	// 		duration: 260,
-	// 		onStopped: () => {
-	// 			if (actor.is_destroyed()) return
-	// 			actor.scale_x = 1
-	// 			actor.scale_y = 1
-	// 			actor.translation_x = 0
-	// 			actor.translation_y = 0
-	// 		},
-	// 	})
-	// 	this.capture.destroy()
-	// }
+		// get animation factors
+		const shadow = getShadowSize(actor.meta_window)
+
+		const size = this.op === Meta.SizeChange.FULLSCREEN ? 80 : -100
+		actor.scale_x = (shadow.frameWidth - size) / shadow.frameWidth
+		actor.scale_y = (shadow.frameHeight - size) / shadow.frameHeight
+		actor.translation_x = actor.translation_y = size / 2
+
+		actor.ease({
+			scale_y: 1,
+			translation_y: 0,
+			mode: Clutter.AnimationMode.EASE_OUT_QUINT,
+			duration: 260,
+			onStopped: () => {
+				if (actor.is_destroyed()) return
+				actor.scale_x = 1
+				actor.scale_y = 1
+				actor.translation_x = 0
+				actor.translation_y = 0
+			},
+		})
+		this.capture.destroy()
+	}
 
 	async maximizeAnimation(actor) {
 		// check before state
 		const source_shadow = actor.__QE_MOVE_source_shadow
 		actor.__QE_MOVE_source_shadow = null
-		if (!source_shadow) return log("shadow")
-		const op = actor.__QE_MOVE_resize_op || 0; log("91")
-		const capture = actor.__QE_MOVE_capture; log("92")
+		if (!source_shadow) return
+		const op = actor.__QE_MOVE_resize_op || 0
+		const capture = actor.__QE_MOVE_capture
+
+		// wait render
+		// await delayFrames(actor, this, 6)
+		await sleep(100)
+		if (actor.is_destroyed()) return
+		if (actor.__QE_MOVE_capture !== capture) return
 
 		// get animation factors
-		const shadow = getShadowSize(actor.meta_window); log("95")
-		const animationSize = getResizeAnimationSize(source_shadow, shadow.frameX, shadow.frameY, shadow.frameWidth, shadow.frameHeight); log("96")
-		const speed = getSpeed(source_shadow, shadow.frameWidth, shadow.frameHeight, 0.9, 0.9, 1.3); log("97", speed)
+		const shadow = getShadowSize(actor.meta_window)
+		const animationSize = getResizeAnimationSize(source_shadow, shadow.frameX, shadow.frameY, shadow.frameWidth, shadow.frameHeight)
+		const speed = getSpeed(source_shadow, shadow.frameWidth, shadow.frameHeight, 0.9, 0.9, 1.3)
 
-		// idk what happen (maybe less buggy)
-		await delayFrames(actor, this, 4); log("100")
-		// await sleep(50)
+		// set capture position
+		const cloneGoalScaleX = capture.scale_x = shadow.frameWidth / source_shadow.frameWidth
+		const cloneGoalScaleY = capture.scale_y = shadow.frameHeight / source_shadow.frameHeight
+		capture.x = (-source_shadow.left * cloneGoalScaleX) + shadow.left
+		capture.y = (-source_shadow.top * cloneGoalScaleY) + shadow.top
+		capture.show()
 
-		actor.scale_x = animationSize.actorInitScaleX; log("103")
-		actor.scale_y = animationSize.actorInitScaleY; log("104")
-		actor.translation_x = animationSize.actorTranslationX; log("105")
-		actor.translation_y = animationSize.actorTranslationY; log("106")
-		actor.opacity = 255; log("107")
+		// set actor position
+		actor.scale_x = animationSize.actorInitScaleX
+		actor.scale_y = animationSize.actorInitScaleY
+		actor.translation_x = animationSize.actorTranslationX
+		actor.translation_y = animationSize.actorTranslationY
+
+		// thaw
+		if (actor.__QE_MOVE_freeze) {
+			actor.thaw()
+			actor.__QE_MOVE_freeze = null
+		}
 
 		// Animate real actor
-		const durationY = (op === Meta.SizeChange.MAXIMIZE ? 340 : 360) * speed; log("110")
-		const durationX = (op === Meta.SizeChange.MAXIMIZE ? 330 : 360) * speed; log("111")
-		const modeY = op === Meta.SizeChange.MAXIMIZE ? Clutter.AnimationMode.EASE_OUT_QUINT : Clutter.AnimationMode.EASE_OUT_EXPO; log("112")
-		const modeX = op === Meta.SizeChange.MAXIMIZE ? Clutter.AnimationMode.EASE_OUT_QUART : Clutter.AnimationMode.EASE_OUT_QUINT; log("113")
+		const durationY = (op === Meta.SizeChange.MAXIMIZE ? 340 : 360) * speed
+		const durationX = (op === Meta.SizeChange.MAXIMIZE ? 330 : 360) * speed
+		const modeY = op === Meta.SizeChange.MAXIMIZE ? Clutter.AnimationMode.EASE_OUT_QUINT : Clutter.AnimationMode.EASE_OUT_EXPO
+		const modeX = op === Meta.SizeChange.MAXIMIZE ? Clutter.AnimationMode.EASE_OUT_QUART : Clutter.AnimationMode.EASE_OUT_QUINT
 		actor.ease({
 			scale_y: 1,
 			translation_y: 0,
@@ -123,38 +155,30 @@ export class MoveAnimation {
 				actor.scale_y = 1
 				actor.translation_x = 0
 				actor.translation_y = 0
+				this.completed_size_change(actor)
 			},
-		}); log("126")
+		})
 		actor.ease({
 			scale_x: 1,
 			translation_x: 0,
 			duration: durationX,
 			mode: modeX,
-		}); log("132")
+		})
 
-		// Animate clone fade actor
-		capture.ease({
-			scale_y: animationSize.cloneGoalScaleY,
-			y: animationSize.cloneGoalY,
-			mode: modeY,
-			duration: durationY,
-		}); log("140")
-		capture.ease({
-			scale_x: animationSize.cloneGoalScaleX,
-			x: animationSize.cloneGoalX,
-			duration: durationX,
-			mode: modeX,
-		}); log("146")
-		await sleep(10 * speed); log("147")
-		if (capture.__destroyed) return
+		// fade capture
+		await sleep((this.op === Meta.SizeChange.MAXIMIZE ? 30 : 20) * speed)
+		if (actor.is_destroyed()) return
+		if (actor.__QE_MOVE_capture !== capture) return
 		capture.ease_property('opacity', 0, {
-			duration: (op === Meta.SizeChange.MAXIMIZE ? 160 : 120) * speed,
-			mode: op === Meta.SizeChange.MAXIMIZE ? Clutter.AnimationMode.EASE_OUT_EXPO : Clutter.AnimationMode.EASE_OUT_QUART,
+			duration: (this.op === Meta.SizeChange.MAXIMIZE ? 120 : 100) * speed,
+			// duration: (this.op === Meta.SizeChange.MAXIMIZE ? 90 : 60) * speed,
+			// mode: this.op === Meta.SizeChange.MAXIMIZE ? Clutter.AnimationMode.EASE_OUT_EXPO : Clutter.AnimationMode.EASE_IN_QUINT,
+			mode: this.op === Meta.SizeChange.MAXIMIZE ? Clutter.AnimationMode.EASE_OUT_CUBIC : Clutter.AnimationMode.EASE_OUT_QUAD,
 			onStopped: () => {
-				if (capture.__destroyed) return
-				actor.__QE_MOVE_capture = null
+				if (actor.is_destroyed()) return
+				if (actor.__QE_MOVE_capture !== capture) return
 				capture.destroy()
-				this.completed_size_change(actor)
+				actor.__QE_MOVE_capture = null
 			}
 		})
 	}
@@ -162,45 +186,27 @@ export class MoveAnimation {
 	enable() {
 		ShouldAnimateActorHook.add("_sizeChangeWindow", () => false)
 
-		this.completed_size_change = (
-			this.orig_completed_size_change = global.window_manager.completed_size_change
-		).bind(global.window_manager)
-		global.window_manager.completed_size_change = () => { }
-
 		const maid = this.#maid = new Maid()
+		maid.patchJob(global.window_manager, "completed_size_change", (orig) => {
+			this.completed_size_change = orig.bind(global.window_manager)
+			return () => { }
+		})
 		maid.functionJob(() => ShouldAnimateActorHook.remove("_sizeChangeWindow"))
 		maid.connectJob(global.window_manager, "size-change", (shellwm, actor, op, oldFrameRect, oldBufferRect) => {
-			log(op)
 			this.before(actor, op, oldFrameRect, oldBufferRect)
 		})
 		maid.connectJob(global.window_manager, "size-changed", (shellwm, actor) => {
-			// if (actor._noAnimation) return
-			// log(actor)
 			if (actor.is_destroyed()) {
-				log("destroyed??")
-				if (actor.__QE_MOVE_capture && !actor.__QE_MOVE_capture.__destroyed) {
-					actor.__QE_MOVE_capture.__destroyed = true
-					actor.__QE_MOVE_capture.destroy()
-				}
 				return
 			}
-
-			actor.remove_all_transitions()
-			// if (maximizeOps.includes(actor.__QE_MOVE_resize_op) !== -1) {
-			log("let's go maximizeAnimation")
+			// actor.remove_all_transitions()
 			this.maximizeAnimation(actor).catch(log)
-			// }
-			// } else if (fullscreenOps.includes(this.op) !== -1) {
-			// this.fullscreenAnimation(actor).catch(log)
-			// }
 		})
 	}
 
 	disable() {
 		this.#maid.destroy()
-		this.#maid = null
-		global.window_manager.completed_size_change = this.orig_completed_size_change
-		this.orig_completed_size_change = this.completed_size_change = null
+		this.completed_size_change = this.#maid = null
 		for (const actor of global.get_window_actors()) {
 			actor.__QE_MOVE_resize_op = null
 		}

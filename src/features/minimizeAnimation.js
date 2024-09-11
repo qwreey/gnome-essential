@@ -4,7 +4,9 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js"
 import {
 	ShouldAnimateActorHook,
 	delayFrames,
-	Maid
+	Maid,
+	waitForOverviewToHide,
+	sleep,
 } from "../libs/utility.js"
 
 // TODO: rewrite this
@@ -21,9 +23,11 @@ class AnimationHandler {
 
 	constructor(actor, icon, isOpening, onCompleted) {
 		actor.show()
+		// waitForOverviewToHide().then(() => {
 		if (isOpening) actor.visible = false
-		if (isOpening) delayFrames(actor, this, 8).then(this.init.bind(this, actor, icon, isOpening, onCompleted)).catch(log)
+		if (isOpening) sleep(100).then(this.init.bind(this, actor, icon, isOpening, onCompleted)).catch(log)
 		else this.init(actor, icon, isOpening, onCompleted)
+		// })
 	}
 
 	init(actor, icon, isOpening, onCompleted) {
@@ -110,11 +114,7 @@ export class MinimizeAnimation {
 		maid.functionJob(() => ShouldAnimateActorHook.remove("_minimizeWindow"))
 		maid.functionJob(() => ShouldAnimateActorHook.remove("_unminimizeWindow"))
 		maid.connectJob(global.window_manager, "minimize", (e, actor) => {
-			if (actor._noAnimation) {
-				this.completed_minimize(actor)
-				return
-			}
-			if (Main.overview.visible) {
+			if (Main.overview.visible || actor._noAnimation) {
 				this.completed_minimize(actor)
 				return
 			}
@@ -123,11 +123,7 @@ export class MinimizeAnimation {
 			this.createMinimizeActorEffect(actor, this.getIcon(actor))
 		})
 		maid.connectJob(global.window_manager, "unminimize", (e, actor) => {
-			if (actor._noAnimation) {
-				this.completed_minimize(actor)
-				return
-			}
-			if (Main.overview.visible) {
+			if (Main.overview.visible || actor._noAnimation) {
 				this.completed_unminimize(actor)
 				return
 			}
@@ -135,30 +131,20 @@ export class MinimizeAnimation {
 			this.destroyActorEffect(actor)
 			this.createUnminimizeActorEffect(actor, this.getIcon(actor))
 		})
-
-		this.orig_completed_minimize = Main.wm._shellwm.completed_minimize
-		this.completed_minimize = Main.wm._shellwm.completed_minimize.bind(Main.wm._shellwm)
-		Main.wm._shellwm.completed_minimize = function (actor) {
-			return
-		}
-
-		this.orig_completed_unminimize = Main.wm._shellwm.completed_unminimize
-		this.completed_unminimize = Main.wm._shellwm.completed_unminimize.bind(Main.wm._shellwm)
-		Main.wm._shellwm.completed_unminimize = function (actor) {
-			return
-		}
+		maid.patchJob(Main.wm._shellwm, "completed_minimize", (orig) => {
+			this.completed_minimize = orig.bind(Main.wm._shellwm)
+			return () => { }
+		})
+		maid.patchJob(Main.wm._shellwm, "completed_unminimize", (orig) => {
+			this.completed_unminimize = orig.bind(Main.wm._shellwm)
+			return () => { }
+		})
 	}
 
 	disable() {
 		this.#maid.destroy()
-		this.#maid = null
-
 		global.get_window_actors().forEach(actor => this.destroyActorEffect(actor))
-
-		Main.wm._shellwm.completed_minimize = this.orig_completed_minimize
-		Main.wm._shellwm.completed_unminimize = this.orig_completed_unminimize
-		this.orig_completed_minimize = this.orig_completed_unminimize = null
-		this.completed_minimize = this.completed_unminimize = null
+		this.#maid = this.completed_minimize = this.completed_unminimize = null
 	}
 
 	destroyActorEffect(actor) {

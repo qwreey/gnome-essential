@@ -61,25 +61,11 @@ const verbose = false
 export default class MainExtension extends Extension {
 	constructor(meta) {
 		super(meta)
-		this.enabledList = null
 		this.start = null
 		this.last = null
 		this.now = null
-	}
 
-	enable() {
-		this.last = this.start = +Date.now()
-		log("[QE] Setup shared objects")
-		for (const item of ExtensionHandlers) {
-			item.enable(this)
-			if (verbose) {
-				this.now = +Date.now()
-				log("[QE] | Loaded " + item.constructor.name + " taken " + (this.now - this.last) + "ms")
-				this.last = this.now
-			}
-		}
-
-		log("[QE] Init classes")
+		if (verbose) { log("[QE] Init classes") }
 		this.enabledList = [
 			// new FuckYouKakaoTalk(),
 			// new EdgeTmpHide(),
@@ -103,7 +89,7 @@ export default class MainExtension extends Extension {
 			// new TransparentPanel(),
 			new MinimizeAnimation(),
 			// new AddDateMenuIcon(),
-			// new MoveAnimation(),
+			new MoveAnimation(),
 			new OpenCloseAnimation(),
 			// new ThemeHandle(),
 			// new LapyIsCute(),
@@ -117,6 +103,20 @@ export default class MainExtension extends Extension {
 			new Wireframe(),
 			new TilePreview(),
 		]
+	}
+
+	enable() {
+		this.last = this.start = +Date.now()
+		if (verbose) { log("[QE] Setup shared objects") }
+		for (const item of ExtensionHandlers) {
+			item.enable(this)
+			if (verbose) {
+				this.now = +Date.now()
+				log("[QE] | Loaded " + item.constructor.name + " taken " + (this.now - this.last) + "ms")
+				this.last = this.now
+			}
+		}
+
 		if (verbose) {
 			this.last = +Date.now()
 			log("[QE] Taken " + (this.last - this.start) + "ms")
@@ -130,14 +130,13 @@ export default class MainExtension extends Extension {
 				this.last = this.now
 			}
 		}
-		this.enabledList.reverse()
-		log("[QE] Loaded! taken " + (+Date.now() - this.start) + "ms")
+		if (verbose) { log("[QE] Loaded! taken " + (+Date.now() - this.start) + "ms") }
 	}
 
 	disable() {
-		if (!this.enabledList) return
-		for (const item of this.enabledList) item.disable()
+		for (let i = this.enabledList.length - 1; i >= 0; i--) {
+			this.enabledList[i].disable(i)
+		}
 		for (const item of ExtensionHandlers) item.disable()
-		this.enabledList = null
 	}
 }

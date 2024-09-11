@@ -141,40 +141,39 @@ export class OpenCloseAnimation {
 	}
 
 	async close(actor) {
-		if (((!actor._windowType) || actor._windowType == Meta.WindowType.DESKTOP) && actor.meta_window.get_wm_class() == "Nemo-desktop") {
-			actor.opacity = 255
-			actor.ease({
-				opacity: 0,
-				duration: 320,
-				mode: Clutter.AnimationMode.EASE_OUT_QUART,
-				onStopped: () => this.completed_destroy(actor)
-			})
-			return
-		}
+		// if (((!actor._windowType) || actor._windowType == Meta.WindowType.DESKTOP) && actor.meta_window.get_wm_class() == "Nemo-desktop") {
+		// 	actor.opacity = 255
+		// 	actor.ease({
+		// 		opacity: 0,
+		// 		duration: 320,
+		// 		mode: Clutter.AnimationMode.EASE_OUT_QUART,
+		// 		onStopped: () => this.completed_destroy(actor)
+		// 	})
+		// 	return
+		// }
 		let clone
 		switch (actor._windowType) {
 			case Meta.WindowType.NORMAL:
 			case undefined:
 				// const bottom = this.get_bottom(actor)
-				clone = this._captureWindow(actor)
-				if (actor.get_parent() == global.window_group) global.window_group.insert_child_above(clone, actor)
-				else global.window_group.add_child(clone)
-				this.completed_destroy(actor)
+				// clone = this._captureWindow(actor)
+				// if (actor.get_parent() == global.window_group) global.window_group.insert_child_above(clone, actor)
+				// else global.window_group.add_child(clone)
+				// this.completed_destroy(actor)
 
-				clone.set_pivot_point(0.5, 0.5)
-				clone.opacity = 255
-				clone.scale_x = 1
-				clone.scale_y = 1
-				// clone.translation_y = 0
+				actor.set_pivot_point(0.5, 0.5)
+				actor.opacity = 255
+				actor.scale_x = 1
+				actor.scale_y = 1
 
-				clone.ease({
+				actor.ease({
 					scale_x: 0.86,
 					scale_y: 0.86,
 					opacity: 0,
 					// translation_y: bottom,
 					duration: 200,
 					mode: Clutter.AnimationMode.EASE_IN_QUART,
-					onStopped: () => clone.destroy()
+					onStopped: () => this.completed_destroy(actor)
 				})
 				break
 			case Meta.WindowType.TOOLTIP:
@@ -221,23 +220,22 @@ export class OpenCloseAnimation {
 				break
 			case Meta.WindowType.MODAL_DIALOG:
 			case Meta.WindowType.DIALOG:
-				clone = this._captureWindow(actor)
-				if (actor.get_parent() == global.window_group) global.window_group.insert_child_above(clone, actor)
-				else global.window_group.add_child(clone)
-				this.completed_destroy(actor)
+				// clone = this._captureWindow(actor)
+				// if (actor.get_parent() == global.window_group) global.window_group.insert_child_above(clone, actor)
+				// else global.window_group.add_child(clone)
 
-				clone.set_pivot_point(0.5, 0.5)
-				clone.scale_y = 1
-				clone.scale_x = 1
-				clone.opacity = 255
+				actor.set_pivot_point(0.5, 0.5)
+				actor.scale_y = 1
+				actor.scale_x = 1
+				actor.opacity = 255
 
-				clone.ease({
+				actor.ease({
 					opacity: 0,
 					scale_x: 1.1,
 					scale_y: 1.1,
 					duration: 260,
 					mode: Clutter.AnimationMode.EASE_OUT_EXPO,
-					onStopped: () => clone.destroy()
+					onStopped: () => this.completed_destroy(actor)
 				})
 				break
 			default:
@@ -254,22 +252,19 @@ export class OpenCloseAnimation {
 		maid.functionJob(() => ShouldAnimateActorHook.remove("_mapWindow"))
 		maid.functionJob(() => ShouldAnimateActorHook.remove("_destroyWindow"))
 		maid.connectJob(global.window_manager, "map", (e, actor) => {
-			this.open(actor).catch(log)
+			this.open(actor).catch(logError)
 		})
 		maid.connectJob(global.window_manager, "destroy", (e, actor) => {
-			this.close(actor).catch(log)
+			this.close(actor).catch(logError)
 		})
-
-		this.orig_completed_destroy = Main.wm._shellwm.completed_destroy
-		this.completed_destroy = Main.wm._shellwm.completed_destroy.bind(Main.wm._shellwm)
-		Main.wm._shellwm.completed_destroy = function (actor) {
-			return
-		}
+		maid.patchJob(Main.wm._shellwm, "completed_destroy", (orig) => {
+			this.completed_destroy = orig.bind(Main.wm._shellwm)
+			return () => { }
+		})
 	}
 
 	disable() {
 		this.#maid.destroy()
-		Main.wm._shellwm.completed_destroy = this.orig_completed_destroy
-		this.#maid = this.orig_completed_destroy = this.completed_destroy = null
+		this.#maid = this.completed_destroy = null
 	}
 }

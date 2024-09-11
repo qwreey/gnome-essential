@@ -110,6 +110,13 @@ const CommonMinSizePrecalc = {
 	"org.gnome.SystemMonitor": [620, 480],
 	"com.github.wwmm.easyeffects": [486, 433],
 	"org.gnome.Calendar": [360, 600],
+	"sober": [
+		{
+			"title": "Sober",
+			"size": [185, 100],
+			"window_type": 0,
+		}
+	],
 
 	// [(w=r(66).get_parent().get_parent().meta_window).get_frame_rect().width,w.get_frame_rect().height,w.wm_class,w.window_type]
 	// log((w=r(77).get_parent().get_parent().meta_window).get_frame_rect().width,w.get_frame_rect().height,w.wm_class,w.window_type)
