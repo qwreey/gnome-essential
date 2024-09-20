@@ -4,5 +4,8 @@
 		<key name="qe-backgroundicon" type="as">
 			<default><![CDATA[['<Super>d']]]></default>
 		</key>
+		<key name="qe-ws-last-windows" type="as">
+			<default><![CDATA[[]]]></default>
+		</key>
 	</schema>
 </schemalist>

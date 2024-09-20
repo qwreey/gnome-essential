@@ -58,8 +58,8 @@ export class OpenCloseAnimation {
 			scale_y: isOpen ? 1 : animationSize.cloneGoalScaleY,
 			translation_x: isOpen ? 0 : modalX,
 			translation_y: isOpen ? 0 : modalY,
-			mode: Clutter.AnimationMode.EASE_OUT_QUINT,
-			duration: isOpen ? 320 : 300,
+			mode: isOpen ? Clutter.AnimationMode.EASE_OUT_QUINT : Clutter.AnimationMode.EASE_OUT_QUART,
+			duration: isOpen ? 320 : 330,
 			onStopped: () => {
 				if (!isOpen) {
 					this.completed_destroy(modalActor)
@@ -96,15 +96,16 @@ export class OpenCloseAnimation {
 		})
 	}
 
+	FileselectorTitles = ["Open Files", "Open video", "Open Folder"]
 	isAnimatableFileselector(actor, isOpen) {
 		const window = actor.meta_window
 		if (actor._windowType !== Meta.WindowType.MODAL_DIALOG) return
-		if (window.wm_class !== "org.gnome.Nautilus" && window.title !== "Open Files") return
+		if (window.wm_class !== "org.gnome.Nautilus" && !this.FileselectorTitles.includes(window.title)) return
 
 		const root = actor.meta_window.find_root_ancestor()
 		if (!root) return
 		if (root.wm_class === "org.gnome.Nautilus") return
-		if (isOpen && actor.meta_window.get_maximized()) return
+		if (isOpen && root.get_maximized()) return
 		if (!isOpen && !root.get_compositor_private().__QE_fileselector) return
 
 		return root
@@ -134,11 +135,10 @@ export class OpenCloseAnimation {
 		switch (actor._windowType) {
 			case Meta.WindowType.NORMAL:
 				actor.show()
-
 				actor.remove_all_transitions()
 				actor.set_pivot_point(0.5, 0.5)
-				actor.scale_x = 0.74
-				actor.scale_y = 0.74
+				actor.scale_x = 0.88
+				actor.scale_y = 0.88
 				actor.opacity = 160
 
 				actor.ease({
@@ -251,6 +251,7 @@ export class OpenCloseAnimation {
 		switch (actor._windowType) {
 			case Meta.WindowType.NORMAL:
 			case undefined:
+				actor.remove_all_transitions()
 				actor.set_pivot_point(0.5, 0.5)
 				actor.opacity = 255
 				actor.scale_x = 1
@@ -309,6 +310,7 @@ export class OpenCloseAnimation {
 				break
 			case Meta.WindowType.MODAL_DIALOG:
 			case Meta.WindowType.DIALOG:
+				actor.remove_all_transitions()
 				actor.set_pivot_point(0.5, 0.5)
 				actor.scale_y = 1
 				actor.scale_x = 1
