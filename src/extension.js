@@ -28,12 +28,12 @@ import { Extension } from "resource:///org/gnome/shell/extensions/extension.js"
 import { MoveNotification } from "./features/moveNotification.js"
 
 // import { MoveDateMenu } from "./moveDateMenu.js"
-// import { RemoveDash } from "./removeDash.js"
+import { RemoveDash } from "./features/removeDash.js"
 // import { AnimationSpeed } from "./animationSpeed.js"
 import { ReducePanelMargin } from "./features/reducePanelMargin.js"
-// import { NemoDesktopIntegration } from "./nemoDesktopIntegration.js"
+import { NemoDesktopIntegration } from "./features/nemoDesktopIntegration.js"
 // import { ChangeWorkspaceEasing } from "./changeWorkspaceEasing.js"
-// import { StartupNoOverview } from "./features/startupNoOverview.js"
+import { StartupNoOverview } from "./features/startupNoOverview.js"
 // import { TransparentPanel } from "./transparentPanel.js"
 import { MinimizeAnimation } from "./features/minimizeAnimation.js"
 import { MoveAnimation } from "./features/moveAnimation.js"
@@ -55,6 +55,7 @@ import { ExtensionHandlers } from "./libs/utility.js"
 import { Wireframe } from "./features/wireframe.js"
 import { TilePreview } from "./features/tilePreview.js"
 // import { ReorderPannel } from "./reorderPannel.js"
+import { WorkspaceAnimationFix } from "./features/workspaceAnimationFix.js"
 
 const verbose = false
 
@@ -78,14 +79,15 @@ export default class MainExtension extends Extension {
 			// new RemoveAltTabDelay(),
 			// new ReorderPannel(),
 			// new MoveDateMenu(),
-			// new RemoveDash(),
+			new RemoveDash(),
 			// new AnimationSpeed(),
 			// new MenuButtons(),
 			new ReducePanelMargin(),
-			// new NemoDesktopIntegration(),
+			new NemoDesktopIntegration(),
+			new WorkspaceAnimationFix(),
 			// new ChangeWorkspaceEasing(),
 			new MoveNotification(),
-			// new StartupNoOverview(),
+			new StartupNoOverview(),
 			// new TransparentPanel(),
 			new MinimizeAnimation(),
 			// new AddDateMenuIcon(),

@@ -26,9 +26,10 @@ export class Maid {
 		Connect: 0,
 		Function: 1,
 		Dispose: 2,
-		Destroy: 3,
-		SafeDestroy: 4,
-		Patch: 5,
+		RunDispose: 3,
+		Destroy: 4,
+		SafeDestroy: 5,
+		Patch: 6,
 	}
 	static Priority = {
 		High: 2000,
@@ -50,6 +51,10 @@ export class Maid {
 
 	disposeJob(object, priority = 0) {
 		this.getRecords().push([this.#TaskType.Dispose, priority, object])
+	}
+
+	runDisposeJob(object, priority = 0) {
+		this.getRecords().push([this.#TaskType.RunDispose, priority, object])
 	}
 
 	destroyJob(object, priority = 0) {
@@ -89,6 +94,9 @@ export class Maid {
 					break
 				case this.#TaskType.Dispose:
 					record[0].dispose()
+					break
+				case this.#TaskType.RunDispose:
+					record[0].run_dispose()
 					break
 				case this.#TaskType.Destroy:
 					record[0].destroy()
@@ -350,6 +358,7 @@ export class PointerMovePreventer extends EventEmitter {
 }
 
 // Fake pointer
+// FIXME: 화면 가장자리 넘어가기도 함 (듀얼모니터일때)
 export class FakePointer {
 	#cursorSprite
 	#cursorActor
@@ -567,6 +576,27 @@ export function sleep_lazy(ms) {
 		r()
 		return GLib.SOURCE_REMOVE
 	}))
+}
+export const EmptyDelay = { stop: () => false, isOngoing: () => false }
+export function delay(ms, func) {
+	let timeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms || 1, () => {
+		timeout = null
+		func()
+		return GLib.SOURCE_REMOVE
+	})
+	return {
+		stop() {
+			if (!timeout || timeout < 0) {
+				return false
+			}
+			GLib.source_remove(timeout)
+			timeout = null
+			return true
+		},
+		isOngoing() {
+			return timeout && timeout > 0
+		},
+	}
 }
 
 // get window min size with hacky method, after this op,

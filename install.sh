@@ -38,6 +38,7 @@ function build() {
 	mkdir dist -p
 	gnome-extensions pack src\
 		--extra-source=../LICENSE\
+		--extra-source=../gnome-randr-py/gnome-randr.py\
 		--extra-source=../LICENSE-gnome-volume-mixer\
 		--extra-source=features\
 		--extra-source=libs\

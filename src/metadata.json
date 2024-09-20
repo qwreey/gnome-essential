@@ -3,7 +3,7 @@
 	"name": "All in one. Essential tweaks",
 	"settings-schema": "org.gnome.shell.extensions.qwreey-essential",
 	"shell-version": [
-		"46"
+		"47"
 	],
 	"url": "https://github.com/qwreey/gnome-essential",
 	"uuid": "qwreey-essential@qwreey"

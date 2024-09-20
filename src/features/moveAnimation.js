@@ -32,13 +32,14 @@ export class MoveAnimation {
 		// remove old animation
 		actor.remove_all_transitions()
 		if (actor.__QE_MOVE_capture) {
-			actor.__QE_MOVE_capture.destroy()
+			const old = actor.__QE_MOVE_capture
 			actor.__QE_MOVE_capture = null
+			old.destroy()
 			if (actor.__QE_MOVE_freeze) {
 				actor.thaw()
 				actor.__QE_MOVE_freeze = null
 			}
-			this.completed_size_change(actor)
+			// this.completed_size_change(actor)
 		}
 
 		// save old position
@@ -198,7 +199,7 @@ export class MoveAnimation {
 				return
 			}
 			// actor.remove_all_transitions()
-			this.maximizeAnimation(actor).catch(log)
+			this.maximizeAnimation(actor).catch(logError)
 		})
 	}
 

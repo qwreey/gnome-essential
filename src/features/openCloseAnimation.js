@@ -9,6 +9,8 @@ import {
 	Maid,
 	PointerUtil,
 	ShouldAnimateActorHook,
+	getShadowSize,
+	getResizeAnimationSize,
 } from "../libs/utility.js"
 
 export class OpenCloseAnimation {
@@ -27,17 +29,108 @@ export class OpenCloseAnimation {
 		return cloneWindow(window_actor, window_actor.height, window_actor.width, window_actor.x, window_actor.y)
 	}
 
+	animateFileselector(modalActor, rootWin, isOpen) {
+		const modalWin = modalActor.meta_window
+		const modalShadow = getShadowSize(modalWin)
+		const rootShadow = getShadowSize(rootWin)
+		const rootActor = rootWin.get_compositor_private()
+		const rootActorClone = this._captureWindow(rootActor)
+		rootActor.__QE_fileselector = modalActor
+		rootActor.hide()
+
+		const animationSize = getResizeAnimationSize(modalShadow, rootShadow.frameX, rootShadow.frameY, rootShadow.frameWidth, rootShadow.frameHeight)
+		const cloneScaleX = rootActorClone.scale_x = modalShadow.frameWidth / rootShadow.frameWidth
+		const cloneScaleY = rootActorClone.scale_y = modalShadow.frameHeight / rootShadow.frameHeight
+		rootActorClone.x = (-rootShadow.left * cloneScaleX) + modalShadow.left
+		rootActorClone.y = (-rootShadow.top * cloneScaleY) + modalShadow.top
+
+		// set actor position
+		modalActor.scale_x = isOpen ? animationSize.cloneGoalScaleX : 1
+		modalActor.scale_y = isOpen ? animationSize.cloneGoalScaleY : 1
+		const modalX = (animationSize.cloneGoalX - modalShadow.bufferX)
+		const modalY = (animationSize.cloneGoalY - modalShadow.bufferY)
+		modalActor.translation_x = isOpen ? modalX : 0
+		modalActor.translation_y = isOpen ? modalY : 0
+
+		// Animate modal actor
+		modalActor.ease({
+			scale_x: isOpen ? 1 : animationSize.cloneGoalScaleX,
+			scale_y: isOpen ? 1 : animationSize.cloneGoalScaleY,
+			translation_x: isOpen ? 0 : modalX,
+			translation_y: isOpen ? 0 : modalY,
+			mode: Clutter.AnimationMode.EASE_OUT_QUINT,
+			duration: isOpen ? 320 : 300,
+			onStopped: () => {
+				if (!isOpen) {
+					this.completed_destroy(modalActor)
+					if (!rootActor.is_destroyed()) rootActor.show()
+					rootActor.__QE_fileselector = null
+				}
+			}
+		})
+
+		// Animate capute
+		modalActor.add_child(rootActorClone)
+		rootActorClone.opacity = isOpen ? 255 : 0
+		rootActorClone.ease({
+			opacity: isOpen ? 0 : 255,
+			duration: isOpen ? 160 : 180,
+			mode: isOpen ? Clutter.AnimationMode.EASE_IN_QUART : Clutter.AnimationMode.EASE_OUT_QUAD,
+			onStopped: () => {
+				if (modalActor.is_destroyed()) return
+				rootActorClone.destroy()
+			}
+		})
+	}
+
+	animateNemoDesktop(actor, isOpen) {
+		actor.remove_all_transitions()
+		actor.opacity = isOpen ? 0 : 255
+		actor.ease({
+			opacity: isOpen ? 255 : 0,
+			duration: isOpen ? 360 : 320,
+			mode: isOpen ? Clutter.AnimationMode.EASE_IN_QUART : Clutter.AnimationMode.EASE_OUT_QUART,
+			onStopped: () => {
+				if (!isOpen) this.completed_destroy(actor)
+			}
+		})
+	}
+
+	isAnimatableFileselector(actor, isOpen) {
+		const window = actor.meta_window
+		if (actor._windowType !== Meta.WindowType.MODAL_DIALOG) return
+		if (window.wm_class !== "org.gnome.Nautilus" && window.title !== "Open Files") return
+
+		const root = actor.meta_window.find_root_ancestor()
+		if (!root) return
+		if (root.wm_class === "org.gnome.Nautilus") return
+		if (isOpen && actor.meta_window.get_maximized()) return
+		if (!isOpen && !root.get_compositor_private().__QE_fileselector) return
+
+		return root
+	}
+
+	isNemoDesktop(actor) {
+		if (actor._windowType !== Meta.WindowType.DESKTOP) return
+		if (actor.meta_window.wm_class !== "Nemo-desktop") return
+
+		return true
+	}
+
 	async open(actor) {
-		if (((!actor._windowType) || actor._windowType == Meta.WindowType.DESKTOP) && actor.meta_window.get_wm_class() == "Nemo-desktop") {
-			actor.show()
-			actor.opacity = 0
-			actor.ease({
-				opacity: 255,
-				duration: 360,
-				mode: Clutter.AnimationMode.EASE_IN_QUART
-			})
+		// Nemo desktop
+		if (this.isNemoDesktop(actor)) {
+			this.animateNemoDesktop(actor, true)
 			return
 		}
+
+		// File selector
+		const root = this.isAnimatableFileselector(actor, true)
+		if (root) {
+			this.animateFileselector(actor, root, true)
+			return
+		}
+
 		switch (actor._windowType) {
 			case Meta.WindowType.NORMAL:
 				actor.show()
@@ -119,8 +212,8 @@ export class OpenCloseAnimation {
 				actor.show()
 				actor.remove_all_transitions()
 				actor.set_pivot_point(0.5, 0.5)
-				actor.scale_y = 1.18
-				actor.scale_x = 1.18
+				actor.scale_y = 1.12
+				actor.scale_x = 1.12
 				actor.opacity = 0
 
 				actor.ease({
@@ -141,26 +234,23 @@ export class OpenCloseAnimation {
 	}
 
 	async close(actor) {
-		// if (((!actor._windowType) || actor._windowType == Meta.WindowType.DESKTOP) && actor.meta_window.get_wm_class() == "Nemo-desktop") {
-		// 	actor.opacity = 255
-		// 	actor.ease({
-		// 		opacity: 0,
-		// 		duration: 320,
-		// 		mode: Clutter.AnimationMode.EASE_OUT_QUART,
-		// 		onStopped: () => this.completed_destroy(actor)
-		// 	})
-		// 	return
-		// }
+		// Nemo desktop
+		if (this.isNemoDesktop(actor)) {
+			this.animateNemoDesktop(actor, false)
+			return
+		}
+
+		// File selector
+		const root = this.isAnimatableFileselector(actor, false)
+		if (root) {
+			this.animateFileselector(actor, root, false)
+			return
+		}
+
 		let clone
 		switch (actor._windowType) {
 			case Meta.WindowType.NORMAL:
 			case undefined:
-				// const bottom = this.get_bottom(actor)
-				// clone = this._captureWindow(actor)
-				// if (actor.get_parent() == global.window_group) global.window_group.insert_child_above(clone, actor)
-				// else global.window_group.add_child(clone)
-				// this.completed_destroy(actor)
-
 				actor.set_pivot_point(0.5, 0.5)
 				actor.opacity = 255
 				actor.scale_x = 1
@@ -170,7 +260,6 @@ export class OpenCloseAnimation {
 					scale_x: 0.86,
 					scale_y: 0.86,
 					opacity: 0,
-					// translation_y: bottom,
 					duration: 200,
 					mode: Clutter.AnimationMode.EASE_IN_QUART,
 					onStopped: () => this.completed_destroy(actor)
@@ -220,10 +309,6 @@ export class OpenCloseAnimation {
 				break
 			case Meta.WindowType.MODAL_DIALOG:
 			case Meta.WindowType.DIALOG:
-				// clone = this._captureWindow(actor)
-				// if (actor.get_parent() == global.window_group) global.window_group.insert_child_above(clone, actor)
-				// else global.window_group.add_child(clone)
-
 				actor.set_pivot_point(0.5, 0.5)
 				actor.scale_y = 1
 				actor.scale_x = 1
@@ -231,8 +316,8 @@ export class OpenCloseAnimation {
 
 				actor.ease({
 					opacity: 0,
-					scale_x: 1.1,
-					scale_y: 1.1,
+					scale_x: 1.08,
+					scale_y: 1.08,
 					duration: 260,
 					mode: Clutter.AnimationMode.EASE_OUT_EXPO,
 					onStopped: () => this.completed_destroy(actor)
